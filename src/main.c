@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "tokenize.h"
+#include "grammar.h"
 
 unsigned long get_file_size(FILE *fp) {
     if (fp == NULL) {
@@ -17,6 +18,8 @@ unsigned long get_file_size(FILE *fp) {
 
 int run(char *source) {
     linked_token_list *tokens = tokenize(source);
+
+    parse(tokens);
 
     print_tokens(tokens);
     free_tokens(tokens);
