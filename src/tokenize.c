@@ -2,9 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "match.h"
 #include "tokenize.h"
-
 
 
 /* util */
@@ -53,7 +51,7 @@ token *create_token() {
     token *t = malloc(sizeof(token));
 
     t->value = NULL;
-    t->type = NONE;
+    t->type = T_NONE;
 
     return t;
 }
@@ -74,40 +72,40 @@ void free_token(token *t) {
 
 void print_token(token *token) {
     if (token->value != NULL) {
-        if (token->type == NUMBER) {
+        if (token->type == T_NUMBER) {
             printf("(NUMBER, '%s')\n", token->value);
-        } else if (token->type == IDENTIFIER) {
+        } else if (token->type == T_IDENTIFIER) {
             printf("(IDENTIFIER, '%s')\n", token->value);
         }
     } else {
         const char *symbol;
         
         switch(token->type) {
-        case AND: symbol = "AND"; break;
-        case OR: symbol = "OR"; break;
-        case FUN: symbol = "FUN"; break;
-        case IF: symbol = "IF"; break;
-        case ELSE: symbol = "ELSE"; break;
-        case FOR: symbol = "FOR"; break;
-        case WHILE: symbol = "WHILE"; break;
+        case T_AND: symbol = "AND"; break;
+        case T_OR: symbol = "OR"; break;
+        case T_FUN: symbol = "FUN"; break;
+        case T_IF: symbol = "IF"; break;
+        case T_ELSE: symbol = "ELSE"; break;
+        case T_FOR: symbol = "FOR"; break;
+        case T_WHILE: symbol = "WHILE"; break;
 
-        case LPAREN: symbol = "LPAREN"; break;
-        case RPAREN: symbol = "RPAREN"; break;
-        case LBRACKET: symbol = "LBRACKET"; break;
-        case RBRACKET: symbol = "RBRACKET"; break;
-        case LCURLY: symbol = "LCURLY"; break;
-        case RCURLY: symbol = "RCURLY"; break;
+        case T_LPAREN: symbol = "LPAREN"; break;
+        case T_RPAREN: symbol = "RPAREN"; break;
+        case T_LBRACKET: symbol = "LBRACKET"; break;
+        case T_RBRACKET: symbol = "RBRACKET"; break;
+        case T_LCURLY: symbol = "LCURLY"; break;
+        case T_RCURLY: symbol = "RCURLY"; break;
 
-        case QUOTE: symbol = "QUOTE"; break;
-        case DBL_QUOTE: symbol = "DBL_QUOTE"; break;
-        case SEMICOLON: symbol = "SEMICOLON"; break;
-        case COMMA: symbol = "COMMA"; break;
-        case DOT: symbol = "DOT"; break;
+        case T_QUOTE: symbol = "QUOTE"; break;
+        case T_DBL_QUOTE: symbol = "DBL_QUOTE"; break;
+        case T_SEMICOLON: symbol = "SEMICOLON"; break;
+        case T_COMMA: symbol = "COMMA"; break;
+        case T_DOT: symbol = "DOT"; break;
 
-        case EQL: symbol = "EQL"; break;
-        case DBL_EQL: symbol = "DBL_EQL"; break;
-        case BANG: symbol = "BANG"; break;
-        case BANG_EQL: symbol = "BANG_EQL"; break;
+        case T_EQL: symbol = "EQL"; break;
+        case T_DBL_EQL: symbol = "DBL_EQL"; break;
+        case T_BANG: symbol = "BANG"; break;
+        case T_BANG_EQL: symbol = "BANG_EQL"; break;
         default:
             symbol = "UNDEF";
         }
@@ -151,7 +149,7 @@ linked_token_list *tokenize(char *source) {
 
             token *new_token = create_token();
             new_token->value = malloc(sizeof(char) * (char_buf_ind + 1));
-            new_token->type = NUMBER;
+            new_token->type = T_NUMBER;
             memcpy(new_token->value, char_buf, char_buf_ind + 1);
 
             append_to_list(token_list, new_token);
@@ -167,7 +165,7 @@ linked_token_list *tokenize(char *source) {
 
             if ((new_token->type = match_keyword(char_buf)) == 0) {
                 new_token->value = malloc(sizeof(char) * (char_buf_ind + 1));
-                new_token->type = IDENTIFIER;
+                new_token->type = T_IDENTIFIER;
                 memcpy(new_token->value, char_buf, char_buf_ind + 1);
             }
 

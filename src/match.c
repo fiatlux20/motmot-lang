@@ -4,92 +4,89 @@
 
 
 unsigned int match_keyword(char *word) {
-    if (strcmp(word, "and") == 0) {
-        return AND;
-    } if (strcmp(word, "or") == 0) {
-        return OR;
-    } if (strcmp(word, "fun") == 0) {
-        return FUN;
-    } if (strcmp(word, "if") == 0) {
-        return IF;
-    } if (strcmp(word, "else") == 0) {
-        return ELSE;
-    } if (strcmp(word, "for") == 0) {
-        return FOR;
-    } if (strcmp(word, "while") == 0) {
-        return WHILE;
+    if (word == NULL) {
+        return 0;
     }
 
-    return 0;
+    switch (word[0]) {
+    case 'a': if (strcmp(word, "and") == 0)   { return T_AND; }
+    case 'e': if (strcmp(word, "else") == 0)  { return T_ELSE; }
+    case 'f': if (strcmp(word, "fun") == 0)   { return T_FUN; }
+         else if (strcmp(word, "for") == 0)   { return T_FOR; }
+    case 'i': if (strcmp(word, "if") == 0)    { return T_IF; }
+    case 'o': if (strcmp(word, "or") == 0)    { return T_OR; }
+    case 'w': if (strcmp(word, "while") == 0) { return T_WHILE; }
+    default:                                  { return 0; }
+    }
 }
 
 unsigned int match_symbol(char *source, unsigned int source_size, unsigned int *ind) {
     switch(source[*ind]) {
-    case '(': return LPAREN;
-    case ')': return RPAREN;
-    case '[': return LBRACKET;
-    case ']': return RBRACKET;
-    case '{': return LCURLY;
-    case '}': return RCURLY;
-    case ';': return SEMICOLON;
-    case 39:  return QUOTE;    /* ascii for ' */
-    case '"': return DBL_QUOTE;
-    case ',': return COMMA;
-    case '.': return DOT;
+    case '(': return T_LPAREN;
+    case ')': return T_RPAREN;
+    case '[': return T_LBRACKET;
+    case ']': return T_RBRACKET;
+    case '{': return T_LCURLY;
+    case '}': return T_RCURLY;
+    case ';': return T_SEMICOLON;
+    case 39:  return T_QUOTE;    /* ascii for ' */
+    case '"': return T_DBL_QUOTE;
+    case ',': return T_COMMA;
+    case '.': return T_DOT;
 
     case '=':
         if ((*ind + 1) < source_size && source[*ind + 1] == '=') {
-            (*ind)++; return DBL_EQL;
+            (*ind)++; return T_DBL_EQL;
         } else {
-            return EQL;
+            return T_EQL;
         } break;
     case '!':
         if ((*ind + 1) < source_size && source[*ind + 1] == '=') {
-            (*ind)++; return BANG_EQL;
+            (*ind)++; return T_BANG_EQL;
         } else {
-            return BANG;
+            return T_BANG;
         } break;
     case '>':
         if ((*ind + 1) < source_size && source[*ind + 1] == '=') {
-            (*ind)++; return GREATER_EQL;
+            (*ind)++; return T_GREATER_EQL;
         } else {
-            return GREATER;
+            return T_GREATER;
         } break;
     case '<':
         if ((*ind + 1) < source_size && source[*ind + 1] == '=') {
-            (*ind)++; return LESS_EQL;
+            (*ind)++; return T_LESS_EQL;
         } else {
-            return LESS;
+            return T_LESS;
         } break;
 
     case '+':
         if ((*ind + 1) < source_size && source[*ind + 1] == '=') {
-            (*ind)++; return PLUS_EQL;
+            (*ind)++; return T_PLUS_EQL;
         } else if ((*ind + 1) < source_size && source[*ind + 1] == '+') {
-            (*ind)++; return PLUS_PLUS;
+            (*ind)++; return T_PLUS_PLUS;
         } else {
-            return PLUS;
+            return T_PLUS;
         } break;
     case '-':
         if ((*ind + 1) < source_size && source[*ind + 1] == '=') {
-            (*ind)++; return MINUS_EQL;
+            (*ind)++; return T_MINUS_EQL;
         } else if ((*ind + 1) < source_size && source[*ind + 1] == '-') {
-            (*ind)++; return MINUS_MINUS;
+            (*ind)++; return T_MINUS_MINUS;
         } else {
-            return MINUS;
+            return T_MINUS;
         } break;
 
     case '*':
         if ((*ind + 1) < source_size && source[*ind + 1] == '=') {
-            (*ind)++; return ASTERISK_EQL;
+            (*ind)++; return T_ASTERISK_EQL;
         } else {
-            return ASTERISK;
+            return T_ASTERISK;
         } break;
     case '/':
         if ((*ind + 1) < source_size && source[*ind + 1] == '=') {
-            (*ind)++; return SLASH_EQL;
+            (*ind)++; return T_SLASH_EQL;
         } else {
-            return SLASH;
+            return T_SLASH;
         } break;
     }
 
