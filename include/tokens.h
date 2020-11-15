@@ -5,6 +5,7 @@ enum token_type {
     T_NONE,
 
     T_IDENTIFIER,
+    T_STRING,
     T_NUMBER,
 
     T_AND,
@@ -59,5 +60,12 @@ typedef struct linked_token_list {
     token *node;
     struct linked_token_list *next;
 } linked_token_list;
+
+
+/* token ops */
+linked_token_list *create_token_list();
+void append_to_list(linked_token_list *list, token *node);
+token *create_token();
+void free_token(token *t);
 
 #endif /* _TOKENS_H_ */
