@@ -119,6 +119,10 @@ token *match_string(char *source, char *buf, unsigned int source_size, unsigned 
     do {
         current = source[(*pos)++];
         buf[buf_pos++] = current;
+
+        if (*pos > source_size) {
+            return NULL;
+        }
     } while (current != quote_char);
 
     buf[buf_pos] = '\0';
@@ -244,6 +248,10 @@ void print_token(token *token) {
         case T_COMMA: symbol = "COMMA"; break;
         case T_DOT: symbol = "DOT"; break;
 
+        case T_HASHTAG: symbol = "HASHTAG"; break;
+        case T_CARET: symbol = "CARET"; break;
+        case T_PIPE: symbol = "PIPE"; break;
+        case T_AMP: symbol = "AMP"; break;
         case T_EQL: symbol = "EQL"; break;
         case T_DBL_EQL: symbol = "DBL_EQL"; break;
         case T_BANG: symbol = "BANG"; break;
@@ -252,6 +260,17 @@ void print_token(token *token) {
         case T_LESS: symbol = "LESS"; break;
         case T_GREATER_EQL: symbol = "GREATER_EQL"; break;
         case T_LESS_EQL: symbol = "LESS_EQL"; break;
+
+        case T_PLUS: symbol = "PLUS"; break;
+        case T_MINUS: symbol = "MINUS"; break;
+        case T_ASTERISK: symbol = "ASTERISK"; break;
+        case T_SLASH: symbol = "SLASH"; break;
+        case T_PLUS_PLUS: symbol = "PLUS_PLUS"; break;
+        case T_MINUS_MINUS: symbol = "MINUS_MINUS"; break;
+        case T_PLUS_EQL: symbol = "PLUS_EQL"; break;
+        case T_MINUS_EQL: symbol = "MINUS_EQL"; break;
+        case T_ASTERISK_EQL: symbol = "ASTERISK_EQL"; break;
+        case T_SLASH_EQL: symbol = "SLASH_EQL"; break;
         default:
             symbol = "UNDEF";
         }
@@ -280,7 +299,7 @@ linked_token_list *tokenize(char *source) {
         if (is_alpha(current)) {
             token *new_token = match_identifier(source, char_buf, source_size, &pos);
             if (new_token == NULL) {
-                fprintf(stderr, "error parsing identifier token\n");
+                fprintf(stderr, "error unable to parse identifier\n");
                 continue;
             } else {
                 append_to_list(token_list, new_token);
@@ -290,7 +309,7 @@ linked_token_list *tokenize(char *source) {
         else if (is_num(current)) {
             token *new_token = match_number(source, char_buf, source_size, &pos);
             if (new_token == NULL) {
-                fprintf(stderr, "error parsing numeric token\n");
+                fprintf(stderr, "error: unable to parse number\n");
                 continue;
             } else {
                 append_to_list(token_list, new_token);
@@ -300,7 +319,7 @@ linked_token_list *tokenize(char *source) {
         else if (is_quote(current)) {
             token *new_token = match_string(source, char_buf, source_size, &pos);
             if (new_token == NULL) {
-                fprintf(stderr, "error parsing string token\n");
+                fprintf(stderr, "error: unable to parse string\n");
                 continue;
             } else {
                 append_to_list(token_list, new_token);

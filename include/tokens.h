@@ -30,6 +30,10 @@ enum token_type {
     T_COMMA,
     T_DOT,
 
+    T_HASHTAG,
+    T_CARET,
+    T_PIPE,
+    T_AMP,
     T_EQL,
     T_DBL_EQL,
     T_BANG,

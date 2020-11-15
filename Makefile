@@ -2,7 +2,7 @@ IDIR := ./include
 SDIR := ./src
 ODIR := ./build
 CC := gcc
-CFLAGS := -I$(IDIR) -Wall -Og -g
+CFLAGS := -I$(IDIR) -Wall -Og -g -fsanitize=address
 
 HEADERS := tokenize.h tokens.h grammar.h
 DEPS := $(patsubst %,$(IDIR)/%,$(HEADERS))
