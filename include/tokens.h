@@ -67,6 +67,11 @@ typedef struct {
     unsigned int count;
 } token_dynamic_array;
 
+typedef struct {
+    unsigned int array_capacity;
+    unsigned int index;
+} token_dynarray_iterator;
+
 /* token ops */
 void print_token(token *t);
 token create_token();
@@ -77,5 +82,8 @@ token_dynamic_array *create_token_dyn_array();
 void append_to_array(token_dynamic_array *array, token *t);
 void free_array(token_dynamic_array *array);
 void print_tokens(token_dynamic_array *array);
+void print_tokens2(token_dynamic_array *array);
+
+token *next_token(token_dynamic_array *array, token_dynarray_iterator *iter);
 
 #endif /* _TOKENS_H_ */

@@ -141,3 +141,22 @@ void print_tokens(token_dynamic_array *array) {
         print_token(&(array->tokens[i]));
     }
 }
+
+token *next_token(token_dynamic_array *array, token_dynarray_iterator *iter) {
+    if (iter->index >= array->count) {
+        return NULL;
+    }
+
+    return &(array->tokens[iter->index++]);
+}
+
+#define foreach(var, array, iter) while ((var = next_token(array, iter)) != NULL)
+void print_tokens2(token_dynamic_array *array) {
+    token *t;
+    token_dynarray_iterator iter = { array->count, 0 };
+
+    foreach(t, array, &iter) {
+        print_token(t);
+    }
+}
+#undef foreach
