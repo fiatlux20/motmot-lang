@@ -4,6 +4,6 @@
 
 #include "grammar.h"
 
-void parse(linked_token_list *tokens) {
+void parse(token_dynamic_array *tokens) {
     return;
 }

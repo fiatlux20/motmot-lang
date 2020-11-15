@@ -252,32 +252,3 @@ token_dynamic_array *tokenize(char *source) {
 
     return token_list;
 }
-
-// void print_tokens(linked_token_list *list) {
-//     if (list->node != NULL) {
-//         print_token(list->node);
-//     }
-
-//     if (list->next != NULL) {
-//         print_tokens(list->next);
-//     }
-// }
-
-void print_tokens(token_dynamic_array *array) {
-    for (unsigned int i = 0; i < array->count; i++) {
-        print_token(&(array->tokens[i]));
-    }
-}
-
-void free_tokens(linked_token_list *list) {
-    if (list->node != NULL) {
-        free_token(list->node);
-    }
-
-    if (list->next != NULL) {
-        free_tokens(list->next);
-    }
-
-    free(list);
-    list = NULL;
-}

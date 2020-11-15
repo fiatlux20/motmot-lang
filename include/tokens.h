@@ -61,11 +61,6 @@ typedef struct {
     unsigned int line;
 } token;
 
-typedef struct linked_token_list {
-    token *node;
-    struct linked_token_list *next;
-} linked_token_list;
-
 typedef struct {
     token *tokens;
     unsigned int capacity;
@@ -74,8 +69,6 @@ typedef struct {
 
 /* token ops */
 void print_token(token *t);
-linked_token_list *create_token_list();
-void append_to_list(linked_token_list *list, token *t);
 token create_token();
 void free_token(token *t);
 
@@ -83,5 +76,6 @@ void free_token(token *t);
 token_dynamic_array *create_token_dyn_array();
 void append_to_array(token_dynamic_array *array, token *t);
 void free_array(token_dynamic_array *array);
+void print_tokens(token_dynamic_array *array);
 
 #endif /* _TOKENS_H_ */
