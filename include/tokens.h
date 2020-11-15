@@ -55,9 +55,10 @@ enum token_type {
     T_SLASH_EQL
 };
 
-typedef struct token {
+typedef struct {
     char *value;
     enum token_type type;
+    unsigned int line;
 } token;
 
 typedef struct linked_token_list {
@@ -65,11 +66,22 @@ typedef struct linked_token_list {
     struct linked_token_list *next;
 } linked_token_list;
 
+typedef struct {
+    token *tokens;
+    unsigned int capacity;
+    unsigned int count;
+} token_dynamic_array;
 
 /* token ops */
+void print_token(token *t);
 linked_token_list *create_token_list();
-void append_to_list(linked_token_list *list, token *node);
-token *create_token();
+void append_to_list(linked_token_list *list, token *t);
+token create_token();
 void free_token(token *t);
+
+/* array ops */
+token_dynamic_array *create_token_dyn_array();
+void append_to_array(token_dynamic_array *array, token *t);
+void free_array(token_dynamic_array *array);
 
 #endif /* _TOKENS_H_ */

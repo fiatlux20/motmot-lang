@@ -53,7 +53,7 @@ unsigned int match_keyword(char *word) {
     }
 }
 
-token *match_identifier(char *source, char *buf, unsigned int source_size, unsigned int *pos) {
+token match_identifier(char *source, char *buf, unsigned int source_size, unsigned int *pos) {
     unsigned int buf_pos = 0;
     char current;
 
@@ -69,21 +69,21 @@ token *match_identifier(char *source, char *buf, unsigned int source_size, unsig
 
     buf[buf_pos] = '\0';
 
-    token *new_token = create_token();
+    token new_token = create_token();
     unsigned int keyword = match_keyword(buf);
 
     if (keyword != 0) {
-        new_token->type = keyword;
+        new_token.type = keyword;
     } else {
-        new_token->value = malloc(sizeof(char) * (buf_pos + 1));
-        memcpy(new_token->value, buf, buf_pos + 1);
-        new_token->type = T_IDENTIFIER;
+        new_token.value = malloc(sizeof(char) * (buf_pos + 1));
+        memcpy(new_token.value, buf, buf_pos + 1);
+        new_token.type = T_IDENTIFIER;
     }
 
     return new_token;
 }
 
-token *match_number(char *source, char *buf, unsigned int source_size, unsigned int *pos) {
+token match_number(char *source, char *buf, unsigned int source_size, unsigned int *pos) {
     unsigned int buf_pos = 0;
     char current;
 
@@ -99,16 +99,16 @@ token *match_number(char *source, char *buf, unsigned int source_size, unsigned 
 
     buf[buf_pos] = '\0';
 
-    token *new_token = create_token();
-    new_token->value = malloc(sizeof(char) * (buf_pos + 1));
-    memcpy(new_token->value, buf, buf_pos + 1);
+    token new_token = create_token();
+    new_token.value = malloc(sizeof(char) * (buf_pos + 1));
+    memcpy(new_token.value, buf, buf_pos + 1);
 
-    new_token->type = T_NUMBER;
+    new_token.type = T_NUMBER;
 
     return new_token;
 }
 
-token *match_string(char *source, char *buf, unsigned int source_size, unsigned int *pos) {
+token match_string(char *source, char *buf, unsigned int source_size, unsigned int *pos) {
     unsigned int buf_pos = 0;
     char current = source[*pos];
     char quote_char = current;
@@ -121,18 +121,18 @@ token *match_string(char *source, char *buf, unsigned int source_size, unsigned 
         buf[buf_pos++] = current;
 
         if (*pos > source_size) {
-            return NULL;
+            break; // TODO fix string overflow
         }
     } while (current != quote_char);
 
     buf[buf_pos] = '\0';
 
-    token *new_token = create_token();
+    token new_token = create_token();
 
-    new_token->value = malloc(sizeof(char) * (buf_pos + 1));
-    memcpy(new_token->value, buf, buf_pos + 1);
+    new_token.value = malloc(sizeof(char) * (buf_pos + 1));
+    memcpy(new_token.value, buf, buf_pos + 1);
 
-    new_token->type = T_STRING;
+    new_token.type = T_STRING;
 
     return new_token;
 }
@@ -210,85 +210,16 @@ unsigned int match_symbol(char *source, unsigned int source_size, unsigned int *
     return 0;
 }
 
-void print_token(token *token) {
-    if (token == NULL) {
-        printf("NULL TOKEN\n");
-        return;
-    }
-
-    if (token->value != NULL) {
-        switch (token->type) {
-        case T_NUMBER: { printf("(NUMBER, '%s')\n", token->value); break; } 
-        case T_IDENTIFIER: { printf("(IDENTIFIER, '%s')\n", token->value); break; }
-        case T_STRING: { printf("(STRING, '%s')\n", token->value); break; }
-        default: break;
-        }
-    } else {
-        const char *symbol;
-
-        switch(token->type) {
-        case T_AND: symbol = "AND"; break;
-        case T_OR: symbol = "OR"; break;
-        case T_FUN: symbol = "FUN"; break;
-        case T_IF: symbol = "IF"; break;
-        case T_ELSE: symbol = "ELSE"; break;
-        case T_FOR: symbol = "FOR"; break;
-        case T_WHILE: symbol = "WHILE"; break;
-
-        case T_LPAREN: symbol = "LPAREN"; break;
-        case T_RPAREN: symbol = "RPAREN"; break;
-        case T_LBRACKET: symbol = "LBRACKET"; break;
-        case T_RBRACKET: symbol = "RBRACKET"; break;
-        case T_LCURLY: symbol = "LCURLY"; break;
-        case T_RCURLY: symbol = "RCURLY"; break;
-
-        case T_QUOTE: symbol = "QUOTE"; break;
-        case T_DBL_QUOTE: symbol = "DBL_QUOTE"; break;
-        case T_SEMICOLON: symbol = "SEMICOLON"; break;
-        case T_COMMA: symbol = "COMMA"; break;
-        case T_DOT: symbol = "DOT"; break;
-
-        case T_HASHTAG: symbol = "HASHTAG"; break;
-        case T_CARET: symbol = "CARET"; break;
-        case T_PIPE: symbol = "PIPE"; break;
-        case T_AMP: symbol = "AMP"; break;
-        case T_EQL: symbol = "EQL"; break;
-        case T_DBL_EQL: symbol = "DBL_EQL"; break;
-        case T_BANG: symbol = "BANG"; break;
-        case T_BANG_EQL: symbol = "BANG_EQL"; break;
-        case T_GREATER: symbol = "GREATER"; break;
-        case T_LESS: symbol = "LESS"; break;
-        case T_GREATER_EQL: symbol = "GREATER_EQL"; break;
-        case T_LESS_EQL: symbol = "LESS_EQL"; break;
-
-        case T_PLUS: symbol = "PLUS"; break;
-        case T_MINUS: symbol = "MINUS"; break;
-        case T_ASTERISK: symbol = "ASTERISK"; break;
-        case T_SLASH: symbol = "SLASH"; break;
-        case T_PLUS_PLUS: symbol = "PLUS_PLUS"; break;
-        case T_MINUS_MINUS: symbol = "MINUS_MINUS"; break;
-        case T_PLUS_EQL: symbol = "PLUS_EQL"; break;
-        case T_MINUS_EQL: symbol = "MINUS_EQL"; break;
-        case T_ASTERISK_EQL: symbol = "ASTERISK_EQL"; break;
-        case T_SLASH_EQL: symbol = "SLASH_EQL"; break;
-        default:
-            symbol = "UNDEF";
-        }
-
-        printf("(%s, %d)\n", symbol, token->type);
-    }
-}
-
 
 /* public functions */
-linked_token_list *tokenize(char *source) {
+token_dynamic_array *tokenize(char *source) {
     unsigned int source_size = strlen(source);
     unsigned int pos = 0;
     char current;
 
     char char_buf[CHAR_BUF_SZ];
 
-    linked_token_list *token_list = create_token_list();
+    token_dynamic_array *token_list = create_token_dyn_array();
 
     while (pos < source_size) {
         current = source[pos];
@@ -297,39 +228,24 @@ linked_token_list *tokenize(char *source) {
         }
 
         if (is_alpha(current)) {
-            token *new_token = match_identifier(source, char_buf, source_size, &pos);
-            if (new_token == NULL) {
-                fprintf(stderr, "error unable to parse identifier\n");
-                continue;
-            } else {
-                append_to_list(token_list, new_token);
-            }
+            token new_token = match_identifier(source, char_buf, source_size, &pos);
+            append_to_array(token_list, &new_token);
         }
 
         else if (is_num(current)) {
-            token *new_token = match_number(source, char_buf, source_size, &pos);
-            if (new_token == NULL) {
-                fprintf(stderr, "error: unable to parse number\n");
-                continue;
-            } else {
-                append_to_list(token_list, new_token);
-            }
+            token new_token = match_number(source, char_buf, source_size, &pos);
+            append_to_array(token_list, &new_token);
         }
 
         else if (is_quote(current)) {
-            token *new_token = match_string(source, char_buf, source_size, &pos);
-            if (new_token == NULL) {
-                fprintf(stderr, "error: unable to parse string\n");
-                continue;
-            } else {
-                append_to_list(token_list, new_token);
-            }
+            token new_token = match_string(source, char_buf, source_size, &pos);
+            append_to_array(token_list, &new_token);
         }
 
         else if (is_symbol(current)) {
-            token *new_token = create_token();
-            new_token->type = match_symbol(source, source_size, &pos);
-            append_to_list(token_list, new_token);
+            token new_token = create_token();
+            new_token.type = match_symbol(source, source_size, &pos);
+            append_to_array(token_list, &new_token);
             pos++;
         }
     }
@@ -337,13 +253,19 @@ linked_token_list *tokenize(char *source) {
     return token_list;
 }
 
-void print_tokens(linked_token_list *list) {
-    if (list->node != NULL) {
-        print_token(list->node);
-    }
+// void print_tokens(linked_token_list *list) {
+//     if (list->node != NULL) {
+//         print_token(list->node);
+//     }
 
-    if (list->next != NULL) {
-        print_tokens(list->next);
+//     if (list->next != NULL) {
+//         print_tokens(list->next);
+//     }
+// }
+
+void print_tokens(token_dynamic_array *array) {
+    for (unsigned int i = 0; i < array->count; i++) {
+        print_token(&(array->tokens[i]));
     }
 }
 

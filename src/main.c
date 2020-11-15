@@ -17,12 +17,15 @@ unsigned long get_file_size(FILE *fp) {
 }
 
 int run(char *source) {
-    linked_token_list *tokens = tokenize(source);
-
-    parse(tokens);
+    token_dynamic_array *tokens = tokenize(source);
 
     print_tokens(tokens);
-    free_tokens(tokens);
+    free_array(tokens);
+
+    // parse(tokens);
+
+    
+    // free_tokens(tokens);
 
     return 0;
 }
