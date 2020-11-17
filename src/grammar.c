@@ -204,6 +204,10 @@ static void expression(parser_state *s) {
 static void statement(parser_state *s) {
     token *t = current_token(s->tokens, s->iter);
 
+    if (t == NULL) {
+        return;
+    }
+
     switch (t->type) {
     case T_IF:
         if_statement(s);
