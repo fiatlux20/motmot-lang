@@ -19,13 +19,10 @@ unsigned long get_file_size(FILE *fp) {
 int run(char *source) {
     token_dynamic_array *tokens = tokenize(source);
 
-    print_tokens(tokens);
+    // print_tokens(tokens);
+    parse(tokens);
+
     free_array(tokens);
-
-    // parse(tokens);
-
-    
-    // free_tokens(tokens);
 
     return 0;
 }

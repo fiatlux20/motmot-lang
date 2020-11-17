@@ -85,5 +85,7 @@ void print_tokens(token_dynamic_array *array);
 void print_tokens2(token_dynamic_array *array);
 
 token *next_token(token_dynamic_array *array, token_dynarray_iterator *iter);
+token *peek_next_token(token_dynamic_array *array, token_dynarray_iterator *iter);
+token *current_token(token_dynamic_array *array, token_dynarray_iterator *iter);
 
 #endif /* _TOKENS_H_ */

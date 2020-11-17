@@ -90,7 +90,7 @@ void free_token(token *t) {
 }
 
 /* dynamic array utils */
-void grow_array(token_dynamic_array *array, unsigned int new_size) {
+static void grow_array(token_dynamic_array *array, unsigned int new_size) {
     array->tokens = realloc(array->tokens, sizeof(token) * new_size);
     if (array->tokens == NULL) {
         fputs("error: unable to realloc array\n", stderr);
@@ -147,7 +147,38 @@ token *next_token(token_dynamic_array *array, token_dynarray_iterator *iter) {
         return NULL;
     }
 
-    return &(array->tokens[iter->index++]);
+    if (peek_next_token(array, iter) != NULL) {
+        printf("advancing to token: ");
+        print_token(&array->tokens[iter->index + 1]);
+    }
+
+    if (iter->index + 1 < array->count) {
+        iter->index++;
+    }
+
+    return &(array->tokens[iter->index]);
+}
+
+token *peek_next_token(token_dynamic_array *array, token_dynarray_iterator *iter) {
+    if (iter->index + 1 >= array->count) {
+        return NULL;
+    }
+
+    printf("peeking next token: ");
+    print_token(&array->tokens[iter->index + 1]);
+
+    return &(array->tokens[iter->index + 1]);
+}
+
+token *current_token(token_dynamic_array *array, token_dynarray_iterator *iter) {
+    if (iter->index >= array->count) {
+        return NULL;
+    }
+
+    printf("current token: ");
+    print_token(&array->tokens[iter->index]);
+
+    return &(array->tokens[iter->index]);
 }
 
 #define foreach(var, array, iter) while ((var = next_token(array, iter)) != NULL)

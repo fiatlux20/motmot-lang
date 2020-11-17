@@ -7,27 +7,27 @@
 
 
 /* util */
-int is_alpha(char c) {
+static int is_alpha(char c) {
     return ((c >= 97 && c <= 122) || (c >= 65 && c <= 90));
 }
 
-int is_num(char c) {
+static int is_num(char c) {
     return (c >= 48 && c <= 57);
 }
 
-int is_alpha_num(char c) {
+static int is_alpha_num(char c) {
     return ((c >= 97 && c <= 122) || (c >= 48 && c <= 57) || (c >= 65 && c <= 90));
 }
 
-int is_whitespace(char c) {
+static int is_whitespace(char c) {
     return (c == ' ' || c == '\t' || c == '\n');
 }
 
-int is_quote(char c) {
+static int is_quote(char c) {
     return c == 39 || c == 34;
 }
 
-int is_symbol(char c) {
+static int is_symbol(char c) {
     if (is_quote(c)) {
         return 0;
     }
@@ -36,7 +36,7 @@ int is_symbol(char c) {
 
 
 /* token matching functions */
-unsigned int match_keyword(char *word) {
+static unsigned int match_keyword(char *word) {
     if (word == NULL) {
         return 0;
     }
@@ -53,7 +53,7 @@ unsigned int match_keyword(char *word) {
     }
 }
 
-token match_identifier(char *source, char *buf, unsigned int source_size, unsigned int *pos) {
+static token match_identifier(char *source, char *buf, unsigned int source_size, unsigned int *pos) {
     unsigned int buf_pos = 0;
     char current;
 
@@ -83,7 +83,7 @@ token match_identifier(char *source, char *buf, unsigned int source_size, unsign
     return new_token;
 }
 
-token match_number(char *source, char *buf, unsigned int source_size, unsigned int *pos) {
+static token match_number(char *source, char *buf, unsigned int source_size, unsigned int *pos) {
     unsigned int buf_pos = 0;
     char current;
 
@@ -108,7 +108,7 @@ token match_number(char *source, char *buf, unsigned int source_size, unsigned i
     return new_token;
 }
 
-token match_string(char *source, char *buf, unsigned int source_size, unsigned int *pos) {
+static token match_string(char *source, char *buf, unsigned int source_size, unsigned int *pos) {
     unsigned int buf_pos = 0;
     char current = source[*pos];
     char quote_char = current;
@@ -137,7 +137,7 @@ token match_string(char *source, char *buf, unsigned int source_size, unsigned i
     return new_token;
 }
 
-unsigned int match_symbol(char *source, unsigned int source_size, unsigned int *ind) {
+static unsigned int match_symbol(char *source, unsigned int source_size, unsigned int *ind) {
     switch(source[*ind]) {
     case '(': return T_LPAREN;
     case ')': return T_RPAREN;
