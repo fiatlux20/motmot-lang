@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "common.h"
+#include "bytecode.h"
 #include "tokenize.h"
 #include "grammar.h"
+#include "vm.h"
 
 unsigned long get_file_size(FILE *fp) {
     if (fp == NULL) {
@@ -16,19 +19,29 @@ unsigned long get_file_size(FILE *fp) {
     return file_size;
 }
 
-int run(char *source) {
+int run(virtual_machine *vm, char *source) {
     token_dynamic_array *tokens = tokenize(source);
 
-    // print_tokens(tokens);
-    parse(tokens);
+    #ifdef DEBUG_TOKENS
+    print_tokens(tokens);
+    #endif
 
+    bytecode_array bytecode = parse(tokens);
     free_array(tokens);
+
+    // debug
+    print_disassembly(&bytecode);
+    execute(vm, &bytecode);
+    print_stack(vm);
+
+    free_bytecode_dynarray(&bytecode);
 
     return 0;
 }
 
 #define IN_BUF_SZ 1024
 int run_interactive() {
+    virtual_machine vm = initialize_vm();
     fputs("Running in interpreter mode.\n", stdout);
     char input[IN_BUF_SZ];
 
@@ -39,13 +52,15 @@ int run_interactive() {
             break;
         }
 
-        run(input);
+        run(&vm, input);
     }
 
+    free_vm(&vm);
     return 0;
 }
 
 int run_file(char *filename) {
+    virtual_machine vm;
     FILE *fp = fopen(filename, "r");
     if (fp == NULL) {
         return -1;
@@ -60,10 +75,12 @@ int run_file(char *filename) {
         return -1;
     }
 
-    run(source);
+    vm = initialize_vm();
+    run(&vm, source);
 
     fclose(fp);
     free(source);
+    free_vm(&vm);
     return 0;
 }
 

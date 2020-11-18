@@ -34,7 +34,8 @@
 
 typedef struct {
     token_dynamic_array *tokens;
-    token_dynarray_iterator *iter;
+    dynarray_iterator *iter;
+    bytecode_array *bytecode;
     unsigned int error;
 } parser_state;
 
@@ -51,7 +52,7 @@ static unsigned int operator(token *t) {
         || type == T_BANG;
 }
 
-static unsigned int value(token *t) {
+static unsigned int is_value(token *t) {
     if (t == NULL) {
         return 0;
     }
@@ -98,7 +99,7 @@ static unsigned int expect_operator(parser_state *s) {
 
 static unsigned int expect_value(parser_state *s) {
     token *t = current_token(s->tokens, s->iter);
-    if (t == NULL || !value(t)) {
+    if (t == NULL || !is_value(t)) {
         s->error = 1;
         return 0;
     }
@@ -107,6 +108,16 @@ static unsigned int expect_value(parser_state *s) {
     return 1;
 }
 
+/* bytecode functions */
+void emit_opcode(bytecode_array *array, opcode_t opcode) {
+    append_to_bytecode_dynarray(array, opcode);
+}
+
+void emit_constant(bytecode_array *array, value val) {
+    append_to_bytecode_dynarray(array, OP_CONSTANT);
+    append_to_bytecode_dynarray(array, array->constants.elements); // index of constant
+    append_to_value_dynarray(&array->constants, val);
+}
 
 /* matching groups */
 static void binary(parser_state *s);
@@ -118,26 +129,44 @@ static void statement(parser_state *s);
 static void if_statement(parser_state *s);
 
 static void binary(parser_state *s) {
+    #ifdef DEBUG_PARSER
     printf("in binary\n");
-    // expression(s);
+    #endif
+
     expect_operator(s);
     expression(s);
+    emit_opcode(s->bytecode, OP_ADD);
+
+    #ifdef DEBUG_PARSER
     printf("out of binary\n");
+    #endif
 }
 
 static void unary(parser_state *s) {
+    #ifdef DEBUG_PARSER
     printf("in unary\n");
+    #endif
+
     expect_operator(s);
     expression(s);
+
+    #ifdef DEBUG_PARSER
     printf("out of unary\n");
+    #endif
 }
 
 static void grouping(parser_state *s) {
+    #ifdef DEBUG_PARSER
     printf("in grouping\n");
+    #endif
+
     expect(s, T_LPAREN);
     expression(s);
     expect(s, T_RPAREN);
+
+    #ifdef DEBUG_PARSER
     printf("out of grouping\n");
+    #endif
 
     if (s->error != 0) {
         report_error("SyntaxError", "Missing parenthesis.");
@@ -152,7 +181,10 @@ static void block(parser_state *s) {
 }
 
 static void expression(parser_state *s) {
+    #ifdef DEBUG_PARSER
     printf("in expression\n");
+    #endif
+
     token *t = current_token(s->tokens, s->iter);
     if (t == NULL) {
         return;
@@ -169,9 +201,10 @@ static void expression(parser_state *s) {
     }
 
     switch (t->type) {
+    case T_NUMBER:
+        emit_constant(s->bytecode, create_number(atof(t->value)));
     case T_IDENTIFIER:
     case T_STRING:
-    case T_NUMBER:
  // case T_BOOLEAN:
         next_token(s->tokens, s->iter);
         // if (operator(next)) {
@@ -201,6 +234,13 @@ static void expression(parser_state *s) {
     }
 }
 
+static void assignment(parser_state *s) {
+    expect(s, T_VAR);
+    expect(s, T_IDENTIFIER);
+    expect(s, T_EQL);
+    expression(s);
+}
+
 static void statement(parser_state *s) {
     token *t = current_token(s->tokens, s->iter);
 
@@ -212,6 +252,9 @@ static void statement(parser_state *s) {
     case T_IF:
         if_statement(s);
         return;
+    case T_VAR:
+        assignment(s);
+        break;
     case T_LCURLY:
         block(s);
         return;
@@ -221,12 +264,13 @@ static void statement(parser_state *s) {
             report_error("SyntaxError", "invalid token encountered while parsing statement.");
             s->error = 0;
         }
-        expect(s, T_SEMICOLON);
-        if (s->error != 0) {
-            report_error("SyntaxError", "Missing semicolon in statement.");
-            s->error = 0;
-        }
         break;
+    }
+
+    expect(s, T_SEMICOLON);
+    if (s->error != 0) {
+        report_error("SyntaxError", "Missing semicolon in statement.");
+        s->error = 0;
     }
 
     if (s->error != 0) {
@@ -246,23 +290,21 @@ static void if_statement(parser_state *s) {
 }
 
 /* public functions */
-void parse(token_dynamic_array *tokens) {
-    token_dynarray_iterator iter = { tokens->count, 0 };
+bytecode_array parse(token_dynamic_array *tokens) {
+    dynarray_iterator iter = { tokens->count, 0 };
+    bytecode_array bytecode = create_bytecode_dynarray();
     parser_state s;
     s.tokens = tokens;
+    s.bytecode = &bytecode;
     s.iter = &iter;
     s.error = 0;
 
     // expression(&s);
     statement(&s);
 
+    #ifdef DEBUG_PARSER
     printf("index at %d out of %d\n", iter.index + 1, tokens->count);
+    #endif
 
-    if (s.error != 0) {
-        fprintf(stderr, "got errors\n");
-    } else {
-        fprintf(stdout, "parsed expression with no errors\n");
-    }
-
-    return;
+    return bytecode;
 }

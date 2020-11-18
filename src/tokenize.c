@@ -34,6 +34,16 @@ static int is_symbol(char c) {
     return (c >= 33 && c <= 47) || (c >=58 && c <= 64) || (c >= 91 && c <= 96) || (c >=123 && c <=126);
 }
 
+static unsigned int compare_upto(unsigned int upto, const char *string, const char *match) {
+    for (int i = 0; i < upto; i++) {
+        if (string[i] == '\0' || string[i] != match[i]) {
+            return 0;
+        }
+    }
+
+    return strcmp(string, match) == 0;
+}
+
 
 /* token matching functions */
 static unsigned int match_keyword(char *word) {
@@ -42,14 +52,18 @@ static unsigned int match_keyword(char *word) {
     }
 
     switch (word[0]) {
-    case 'a': if (strcmp(word, "and") == 0)   { return T_AND; }
-    case 'e': if (strcmp(word, "else") == 0)  { return T_ELSE; }
-    case 'f': if (strcmp(word, "fun") == 0)   { return T_FUN; }
-         else if (strcmp(word, "for") == 0)   { return T_FOR; }
-    case 'i': if (strcmp(word, "if") == 0)    { return T_IF; }
-    case 'o': if (strcmp(word, "or") == 0)    { return T_OR; }
-    case 'w': if (strcmp(word, "while") == 0) { return T_WHILE; }
-    default:                                  { return 0; }
+    case 'a': if (strcmp(word, "and") == 0)     { return T_AND; }
+    case 'e': if (strcmp(word, "else") == 0)    { return T_ELSE; }
+    case 'f': if (compare_upto(2, word, "fun"))   { return T_FUN; }
+         else if (compare_upto(2, word, "for"))   { return T_FOR; }
+         else if (compare_upto(2, word, "false")) { return T_FALSE; }
+    case 'i': if (strcmp(word, "if") == 0)      { return T_IF; }
+    case 'n': if (strcmp(word, "nil") == 0)     { return T_NIL; }
+    case 'o': if (strcmp(word, "or") == 0)      { return T_OR; }
+    case 't': if (strcmp(word, "true") == 0)    { return T_TRUE; }
+    case 'v': if (strcmp(word, "var") == 0)     { return T_VAR; }
+    case 'w': if (strcmp(word, "while") == 0)   { return T_WHILE; }
+    default:                                    { return 0; }
     }
 }
 
@@ -72,7 +86,19 @@ static token match_identifier(char *source, char *buf, unsigned int source_size,
     token new_token = create_token();
     unsigned int keyword = match_keyword(buf);
 
-    if (keyword != 0) {
+    if (keyword == T_TRUE || keyword == T_FALSE) {
+        new_token.type = T_BOOLEAN;
+        if (keyword == T_TRUE) {
+            new_token.value = malloc(sizeof "true");
+            memcpy(new_token.value, "true", sizeof "true");
+        }
+        if (keyword == T_FALSE) {
+            new_token.value = malloc(sizeof "false");
+            memcpy(new_token.value, "false", sizeof "false");
+        }
+    }
+
+    else if (keyword != 0) {
         new_token.type = keyword;
     } else {
         new_token.value = malloc(sizeof(char) * (buf_pos + 1));

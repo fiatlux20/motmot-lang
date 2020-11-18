@@ -16,12 +16,14 @@ void print_token(token *token) {
         case T_NUMBER: { printf("(NUMBER, '%s')\n", token->value); break; } 
         case T_IDENTIFIER: { printf("(IDENTIFIER, '%s')\n", token->value); break; }
         case T_STRING: { printf("(STRING, '%s')\n", token->value); break; }
+        case T_BOOLEAN: { printf("(BOOLEAN, '%s')\n", token->value); break; }
         default: break;
         }
     } else {
         const char *symbol;
 
         switch(token->type) {
+        case T_NIL: symbol = "NIL"; break;
         case T_AND: symbol = "AND"; break;
         case T_OR: symbol = "OR"; break;
         case T_FUN: symbol = "FUN"; break;
@@ -29,6 +31,7 @@ void print_token(token *token) {
         case T_ELSE: symbol = "ELSE"; break;
         case T_FOR: symbol = "FOR"; break;
         case T_WHILE: symbol = "WHILE"; break;
+        case T_VAR: symbol = "VAR"; break;
 
         case T_LPAREN: symbol = "LPAREN"; break;
         case T_RPAREN: symbol = "RPAREN"; break;
@@ -107,10 +110,10 @@ token_dynamic_array *create_token_dyn_array() {
     return array;
 }
 
-#define DYN_ARRAY_GROW_BY 2
+
 void append_to_array(token_dynamic_array *array, token *t) {
     if (array->count == array->capacity) {
-        array->capacity *= DYN_ARRAY_GROW_BY;
+        array->capacity *= DYNARRAY_GROW_BY_FACTOR;
         grow_array(array, array->capacity);
 
         if (array == NULL) {
@@ -142,15 +145,17 @@ void print_tokens(token_dynamic_array *array) {
     }
 }
 
-token *next_token(token_dynamic_array *array, token_dynarray_iterator *iter) {
+token *next_token(token_dynamic_array *array, dynarray_iterator *iter) {
     if (iter->index >= array->count) {
         return NULL;
     }
 
+    #ifdef DEBUG_TOKENS
     if (peek_next_token(array, iter) != NULL) {
         printf("advancing to token: ");
         print_token(&array->tokens[iter->index + 1]);
     }
+    #endif
 
     if (iter->index + 1 < array->count) {
         iter->index++;
@@ -159,34 +164,43 @@ token *next_token(token_dynamic_array *array, token_dynarray_iterator *iter) {
     return &(array->tokens[iter->index]);
 }
 
-token *peek_next_token(token_dynamic_array *array, token_dynarray_iterator *iter) {
+token *peek_next_token(token_dynamic_array *array, dynarray_iterator *iter) {
     if (iter->index + 1 >= array->count) {
         return NULL;
     }
 
+    #ifdef DEBUG_TOKENS
     printf("peeking next token: ");
     print_token(&array->tokens[iter->index + 1]);
+    #endif
 
     return &(array->tokens[iter->index + 1]);
 }
 
-token *current_token(token_dynamic_array *array, token_dynarray_iterator *iter) {
+token *current_token(token_dynamic_array *array, dynarray_iterator *iter) {
     if (iter->index >= array->count) {
         return NULL;
     }
 
+    #ifdef DEBUG_TOKENS
     printf("current token: ");
     print_token(&array->tokens[iter->index]);
+    #endif
 
     return &(array->tokens[iter->index]);
 }
 
-#define foreach(var, array, iter) while ((var = next_token(array, iter)) != NULL)
+#define foreach(var, array) \
+    dynarray_iterator _iter = { array->count, 0 }; \
+    while ((var = next_token(array, &_iter)) != NULL)
+
+
+// #define foreach(var, array, iter) while ((var = next_token(array, iter)) != NULL)
 void print_tokens2(token_dynamic_array *array) {
     token *t;
-    token_dynarray_iterator iter = { array->count, 0 };
+    // dynarray_iterator iter = { array->count, 0 };
 
-    foreach(t, array, &iter) {
+    foreach(t, array) {
         print_token(t);
     }
 }

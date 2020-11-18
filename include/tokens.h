@@ -1,12 +1,16 @@
 #ifndef _TOKENS_H_
 #define _TOKENS_H_
 
+#include "common.h"
+
 enum token_type {
     T_NONE,
+    T_NIL,
 
     T_IDENTIFIER,
     T_STRING,
     T_NUMBER,
+    T_BOOLEAN,
 
     T_AND,
     T_OR,
@@ -15,6 +19,9 @@ enum token_type {
     T_ELSE,
     T_FOR,
     T_WHILE,
+    T_VAR,
+    T_TRUE,
+    T_FALSE,
 
     T_LPAREN,
     T_RPAREN,
@@ -67,11 +74,6 @@ typedef struct {
     unsigned int count;
 } token_dynamic_array;
 
-typedef struct {
-    unsigned int array_capacity;
-    unsigned int index;
-} token_dynarray_iterator;
-
 /* token ops */
 void print_token(token *t);
 token create_token();
@@ -84,8 +86,8 @@ void free_array(token_dynamic_array *array);
 void print_tokens(token_dynamic_array *array);
 void print_tokens2(token_dynamic_array *array);
 
-token *next_token(token_dynamic_array *array, token_dynarray_iterator *iter);
-token *peek_next_token(token_dynamic_array *array, token_dynarray_iterator *iter);
-token *current_token(token_dynamic_array *array, token_dynarray_iterator *iter);
+token *next_token(token_dynamic_array *array, dynarray_iterator *iter);
+token *peek_next_token(token_dynamic_array *array, dynarray_iterator *iter);
+token *current_token(token_dynamic_array *array, dynarray_iterator *iter);
 
 #endif /* _TOKENS_H_ */
