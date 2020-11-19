@@ -29,25 +29,29 @@ int run(virtual_machine *vm, char *source) {
     bytecode_array bytecode = parse(tokens);
     free_array(tokens);
 
-    // debug
+    #ifdef DEBUG_COMPILER
     print_disassembly(&bytecode);
+    #endif
+
     execute(vm, &bytecode);
+
+    #ifdef DEBUG_STACK
     print_stack(vm);
+    #endif
 
     free_bytecode_dynarray(&bytecode);
 
     return 0;
 }
 
-#define IN_BUF_SZ 1024
 int run_interactive() {
     virtual_machine vm = initialize_vm();
     fputs("Running in interpreter mode.\n", stdout);
-    char input[IN_BUF_SZ];
+    char input[INPUT_BUFFER_SIZE];
 
     for (;;) {
         printf(">>> ");
-        if (fgets(input, IN_BUF_SZ, stdin) == NULL) {
+        if (fgets(input, INPUT_BUFFER_SIZE, stdin) == NULL) {
             fputs("\n", stdout);
             break;
         }
@@ -74,6 +78,8 @@ int run_file(char *filename) {
         fprintf(stderr, "problem reading file\n");
         return -1;
     }
+
+    source[file_size] = '\0';
 
     vm = initialize_vm();
     run(&vm, source);

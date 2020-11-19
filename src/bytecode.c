@@ -16,7 +16,7 @@ static void grow_value_array(value_array *array, unsigned int new_size) {
         return;
     }
 
-    array->array = realloc(array->array, new_size);
+    array->array = realloc(array->array, new_size * sizeof(value));
     if (array->array == NULL) {
         fputs("error: unable to realloc array\n", stderr);
     }
@@ -92,17 +92,21 @@ opcode_t *next_opcode(bytecode_array *array, dynarray_iterator *iter) {
 }
 
 void free_bytecode_dynarray(bytecode_array *array) {
+    free_value_dynarray(&array->constants);
     free(array->array);
     array->array = NULL;
 }
 
-#ifdef DEBUG_VM
+#ifdef DEBUG_COMPILER
 static void print_opcode(opcode_t opcode) {
     switch(opcode) {
-    case OP_RETURN: fputs("RETURN\n", stdout); break;
-    case OP_CONSTANT: fputs("CONSTANT\n", stdout); break;
-    case OP_ADD: fputs("ADD\n", stdout); break;
-    default: fputs("UNKNOWN\n", stdout); break;
+    case OP_RETURN: printf("%02x RETURN\n", opcode); break;
+    case OP_CONSTANT: printf("%02x CONSTANT\n", opcode); break;
+    case OP_ADD: printf("%02x ADD\n", opcode); break;
+    case OP_SUB: printf("%02x SUB\n", opcode); break;
+    case OP_MULT: printf("%02x MULT\n", opcode); break;
+    case OP_DIV: printf("%02x DIV\n", opcode); break;
+    default: printf("%02x UNKNOWN\n", opcode); break;
     }
 }
 
@@ -125,15 +129,16 @@ void print_disassembly(bytecode_array *bytecode) {
     unsigned int length = bytecode->elements;
     unsigned int constant_index = 0;
 
-    fputs("--- Disassembly ---\n", stdout);
+    fputs("---- disassembly ----\n", stdout);
     for (unsigned int i = 0; i < length; i++) {
         opcode_t op = bytecode->array[i];
+        printf("%04d  ", i);
         if (op == OP_CONSTANT) {
-            printf("CONSTANT (%lf)\n", bytecode->constants.array[constant_index++].d);
+            printf("%02x CONSTANT (%lf)\n", op, bytecode->constants.array[constant_index++].d);
             i += 1;
         } else {
             print_opcode(bytecode->array[i]);
         }
     }
 }
-#endif /* DEBUG_VM */
+#endif /* DEBUG_COMPILER */

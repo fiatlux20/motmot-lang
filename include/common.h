@@ -2,10 +2,12 @@
 #define _COMMON_H_
 
 #define DEBUG_VM
+#define DEBUG_STACK
 #undef DEBUG_TOKENS
 #undef DEBUG_PARSER
 #define DEBUG_COMPILER
 
+#define INPUT_BUFFER_SIZE 1024
 #define STACK_SIZE 1024
 
 #define MAX_CHUNK_CONSTANTS 256

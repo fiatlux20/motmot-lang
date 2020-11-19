@@ -9,10 +9,9 @@ static void push(vm_stack *s, value val) {
         s->head = 0;
     }
 
-    #ifdef DEBUG_VM
+#ifdef DEBUG_STACK
     printf("pushing %lf. stack head at %d\n", val.d, s->head);
-    #endif
-
+#endif
     s->size++;
     s->at[s->head++] = val;
 }
@@ -22,24 +21,46 @@ static value pop(vm_stack *s) {
         s->head = STACK_SIZE - 1;
     }
 
-    #ifdef DEBUG_VM
+    s->size--;
+#ifdef DEBUG_STACK
     value val = s->at[--s->head];
     printf("popping %lf. stack head at %d\n", val.d, s->head);
 
-    s->size--;
     return val;
-    #else
-    s->size--;
+#else
     return s->at[--s->head];
-    #endif
+#endif
 }
 
+/* opcodes */
 static void op_add(vm_stack *s) {
     value a = pop(s);
     value b = pop(s);
 
     push(s, create_number(a.d + b.d));
 }
+
+static void op_sub(vm_stack *s) {
+    value a = pop(s);
+    value b = pop(s);
+
+    push(s, create_number(a.d - b.d));
+}
+
+static void op_mult(vm_stack *s) {
+    value a = pop(s);
+    value b = pop(s);
+
+    push(s, create_number(a.d * b.d));
+}
+
+static void op_div(vm_stack *s) {
+    value a = pop(s);
+    value b = pop(s);
+
+    push(s, create_number(b.d / a.d));
+}
+
 
 static vm_stack initialize_stack() {
     vm_stack stack;
@@ -86,27 +107,20 @@ unsigned int execute(virtual_machine *vm, bytecode_array *bytecode) {
         case OP_ADD:
             op_add(&vm->stack);
             break;
+        case OP_SUB:
+            op_sub(&vm->stack);
+            break;
+        case OP_MULT:
+            op_mult(&vm->stack);
+            break;
+        case OP_DIV:
+            op_div(&vm->stack);
+            break;
         default:
             printf("unknown instruction\n");
             goto end;
         }
     }
-
-    // for(;;) {
-    //     switch (*(ip++)) {
-    //     case OP_RETURN:
-    //         goto end;
-    //     case OP_CONSTANT:
-    //         push(&vm->stack, bytecode->constants.array[next(ip)]);
-    //         break;
-    //     case OP_ADD:
-    //         op_add(&vm->stack);
-    //         break;
-    //     default:
-    //         break;
-    //     }
-    // }
-
 end:
     return 0;
 }
@@ -115,7 +129,7 @@ void free_vm(virtual_machine *vm) {
     free_stack(&vm->stack);
 }
 
-#ifdef DEBUG_VM
+#ifdef DEBUG_STACK
 void print_stack(virtual_machine *vm) {
     unsigned int size = vm->stack.size;
 
@@ -124,4 +138,4 @@ void print_stack(virtual_machine *vm) {
         printf("%d: %lf\n", i, vm->stack.at[i].d);
     }
 }
-#endif /* DEBUG_VM */
+#endif /* DEBUG_STACK */

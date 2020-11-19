@@ -116,7 +116,7 @@ void emit_opcode(bytecode_array *array, opcode_t opcode) {
 void emit_constant(bytecode_array *array, value val) {
     append_to_bytecode_dynarray(array, OP_CONSTANT);
     append_to_bytecode_dynarray(array, array->constants.elements); // index of constant
-    append_to_value_dynarray(&array->constants, val);
+    append_to_value_dynarray(&(array->constants), val);
 }
 
 /* matching groups */
@@ -133,9 +133,19 @@ static void binary(parser_state *s) {
     printf("in binary\n");
     #endif
 
+    token *operator = current_token(s->tokens, s->iter);
+
     expect_operator(s);
     expression(s);
-    emit_opcode(s->bytecode, OP_ADD);
+
+    switch (operator->type) {
+        case T_PLUS: emit_opcode(s->bytecode, OP_ADD); break;
+        case T_MINUS: emit_opcode(s->bytecode, OP_SUB); break;
+        case T_ASTERISK: emit_opcode(s->bytecode, OP_MULT); break;
+        case T_SLASH: emit_opcode(s->bytecode, OP_DIV); break;
+        default:
+            break;
+    }
 
     #ifdef DEBUG_PARSER
     printf("out of binary\n");
