@@ -13,8 +13,9 @@ OBJ  := $(patsubst %,$(ODIR)/%,$(_OBJ))
 $(ODIR)/%.o: $(SDIR)/%.c $(DEPS) | $(ODIR)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-$(ODIR):
-	mkdir $(ODIR)
 
 interp: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
+
+$(ODIR):
+	mkdir $(ODIR)
