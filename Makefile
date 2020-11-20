@@ -10,8 +10,11 @@ DEPS := $(patsubst %,$(IDIR)/%,$(HEADERS))
 _OBJ := main.o tokenize.o tokens.o grammar.o bytecode.o vm.o
 OBJ  := $(patsubst %,$(ODIR)/%,$(_OBJ))
 
-$(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
+$(ODIR)/%.o: $(SDIR)/%.c $(DEPS) | $(ODIR)
 	$(CC) -c -o $@ $< $(CFLAGS)
+
+$(ODIR):
+	mkdir $(ODIR)
 
 interp: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
