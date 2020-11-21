@@ -25,7 +25,7 @@ static void grow_value_array(value_array *array, unsigned int new_size) {
 value create_number(double n) {
     value val;
     val.type = T_NUMBER;
-    val.d = n;
+    val.as.d = n;
     return val;
 }
 
@@ -134,7 +134,7 @@ void print_disassembly(bytecode_array *bytecode) {
         opcode_t op = bytecode->array[i];
         printf("%04d  ", i);
         if (op == OP_CONSTANT) {
-            printf("%02x CONSTANT (%lf)\n", op, bytecode->constants.array[constant_index++].d);
+            printf("%02x CONSTANT (%lf)\n", op, bytecode->constants.array[constant_index++].as.d);
             i += 1;
         } else {
             print_opcode(bytecode->array[i]);

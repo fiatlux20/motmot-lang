@@ -4,8 +4,9 @@
 #include "common.h"
 #include "bytecode.h"
 #include "tokenize.h"
-#include "grammar.h"
+#include "parser.h"
 #include "vm.h"
+#include "table.h"
 
 unsigned long get_file_size(FILE *fp) {
     if (fp == NULL) {

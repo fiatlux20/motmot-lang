@@ -45,6 +45,13 @@ typedef struct parse_tree_node {
 } parse_tree_node;
 */
 
+typedef struct {
+    token_dynamic_array *tokens;
+    dynarray_iterator *iter;
+    bytecode_array *bytecode;
+    unsigned int error;
+} parser_state;
+
 bytecode_array parse(token_dynamic_array *tokens);
 
 #endif /* GRAMMAR_H_ */

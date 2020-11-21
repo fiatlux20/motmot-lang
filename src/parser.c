@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "grammar.h"
+#include "parser.h"
 
 /* program -> statement
  *
@@ -32,12 +32,6 @@
  *           | minus
  */
 
-typedef struct {
-    token_dynamic_array *tokens;
-    dynarray_iterator *iter;
-    bytecode_array *bytecode;
-    unsigned int error;
-} parser_state;
 
 static unsigned int operator(token *t) {
     if (t == NULL) {

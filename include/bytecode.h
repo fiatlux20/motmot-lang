@@ -5,6 +5,7 @@
 
 #include "common.h"
 #include "tokens.h"
+#include "objects.h"
 
 typedef uint8_t opcode_t;
 
@@ -16,14 +17,6 @@ typedef enum {
     OP_MULT,
     OP_DIV,
 } opcode;
-
-typedef struct {
-    unsigned int type;
-    union {
-        long l;
-        double d;
-    };
-} value;
 
 typedef struct {
     value *array;
@@ -45,6 +38,7 @@ value create_number(double n);
 
 /* array ops */
 bytecode_array create_bytecode_dynarray();
+void init_bytecode_dynarray(bytecode_array *array);
 void append_to_bytecode_dynarray(bytecode_array *array, opcode_t op);
 opcode_t *next_opcode(bytecode_array *array, dynarray_iterator *iter);
 void free_bytecode_dynarray(bytecode_array *array);

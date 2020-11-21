@@ -10,7 +10,7 @@ static void push(vm_stack *s, value val) {
     }
 
 #ifdef DEBUG_STACK
-    printf("pushing %lf. stack head at %d\n", val.d, s->head);
+    printf("pushing %lf. stack head at %d\n", val.as.d, s->head);
 #endif
     s->size++;
     s->at[s->head++] = val;
@@ -24,7 +24,7 @@ static value pop(vm_stack *s) {
     s->size--;
 #ifdef DEBUG_STACK
     value val = s->at[--s->head];
-    printf("popping %lf. stack head at %d\n", val.d, s->head);
+    printf("popping %lf. stack head at %d\n", val.as.d, s->head);
 
     return val;
 #else
@@ -37,28 +37,28 @@ static void op_add(vm_stack *s) {
     value a = pop(s);
     value b = pop(s);
 
-    push(s, create_number(a.d + b.d));
+    push(s, create_number(a.as.d + b.as.d));
 }
 
 static void op_sub(vm_stack *s) {
     value a = pop(s);
     value b = pop(s);
 
-    push(s, create_number(a.d - b.d));
+    push(s, create_number(a.as.d - b.as.d));
 }
 
 static void op_mult(vm_stack *s) {
     value a = pop(s);
     value b = pop(s);
 
-    push(s, create_number(a.d * b.d));
+    push(s, create_number(a.as.d * b.as.d));
 }
 
 static void op_div(vm_stack *s) {
     value a = pop(s);
     value b = pop(s);
 
-    push(s, create_number(b.d / a.d));
+    push(s, create_number(b.as.d / a.as.d));
 }
 
 
@@ -135,7 +135,7 @@ void print_stack(virtual_machine *vm) {
 
     fputs("--- Contents of stack ---\n", stdout);
     for (int i = 0; i < size; i++) {
-        printf("%d: %lf\n", i, vm->stack.at[i].d);
+        printf("%d: %lf\n", i, vm->stack.at[i].as.d);
     }
 }
 #endif /* DEBUG_STACK */
