@@ -29,6 +29,7 @@ struct value {
     union {
         long integer;
         double real;
+        unsigned char boolean;
         char *string;
         Object *obj;
     } as;
@@ -44,6 +45,8 @@ Value nil_value();
 Value int_value(long x);
 Value double_value(double x);
 Value string_value(char *x);
+Value add_strings(Value *s1, Value *s2);
+void print_value(Value *v);
 
 #define IS_OBJECT(value) value.type == VAL_TYPE_OBJ;
 

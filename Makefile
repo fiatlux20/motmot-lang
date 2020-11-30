@@ -2,7 +2,7 @@ IDIR := include
 SDIR := src
 ODIR := build
 CC := gcc
-CWARNS := -Wall -Wshadow -pedantic -Wpointer-arith -Wcast-align -Waggregate-return
+CWARNS := -Wall -Wshadow -pedantic -Wpointer-arith -Wcast-align # -Waggregate-return
 CFLAGS := -I./$(IDIR) $(CWARNS) -Og -g -fsanitize=address
 
 HEADERS := $(wildcard $(IDIR)/*.h)

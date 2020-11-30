@@ -151,12 +151,12 @@ static token match_string(char *source, char *buf, unsigned int source_size, uns
         }
     } while (current != quote_char);
 
-    buf[buf_pos] = '\0';
-
     token new_token = create_token();
 
-    new_token.value = malloc(sizeof(char) * (buf_pos + 1));
-    memcpy(new_token.value, buf, buf_pos + 1);
+    /* excluding the two quote chars */
+    buf[buf_pos - 1] = '\0';
+    new_token.value = malloc(((buf_pos + 1) - 2) * (sizeof *new_token.value));
+    memcpy(new_token.value, buf + 1, buf_pos - 1);
 
     new_token.type = T_STRING;
 

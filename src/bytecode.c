@@ -127,7 +127,10 @@ void print_disassembly(bytecode_array *bytecode) {
         opcode_t op = bytecode->array[i];
         printf("%04d  ", i);
         if (op == OP_CONSTANT) {
-            printf("%02x CONSTANT (%ld)\n", op, bytecode->constants.array[constant_index++].as.integer);
+            Value *v = &bytecode->constants.array[constant_index++];
+            printf("%02x CONSTANT (", op);
+            print_value(v);
+            printf(")\n");
             i += 1;
         } else {
             print_opcode(bytecode->array[i]);

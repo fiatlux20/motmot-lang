@@ -207,8 +207,12 @@ static void expression(parser_state *s) {
     switch (t->type) {
     case T_NUMBER:
         emit_constant(s->bytecode, double_value(atof(t->value)));
+        next_token(s->tokens, s->iter);
+        break;
     case T_IDENTIFIER:
+        break;
     case T_STRING:
+        emit_constant(s->bytecode, string_value(t->value));
  // case T_BOOLEAN:
         next_token(s->tokens, s->iter);
         // if (operator(next)) {

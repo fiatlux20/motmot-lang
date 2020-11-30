@@ -25,11 +25,11 @@ static Value pop(vm_stack *s) {
 #ifdef DEBUG_STACK
     Value val = s->at[s->head];
     if (val.type == VAL_TYPE_DOUBLE) {
-        printf("popping %lf. stack head now at %d\n", val.as.real, s->head);
+        printf("popping double '%lf'. stack head now at %d\n", val.as.real, s->head);
     } else if (val.type == VAL_TYPE_INTEGER) {
-        printf("popping %ld. stack head now at %d\n", val.as.integer, s->head);
+        printf("popping int '%ld'. stack head now at %d\n", val.as.integer, s->head);
     } else if (val.type == VAL_TYPE_STRING) {
-        printf("popping %s. stack head now at %d\n", val.as.string, s->head);
+        printf("popping string '%s'. stack head now at %d\n", val.as.string, s->head);
     }
 
     return val;
@@ -60,7 +60,7 @@ static void op_add(vm_stack *s) {
     } else if (a.type == VAL_TYPE_INTEGER && b.type == VAL_TYPE_INTEGER) {
         push(s, int_value(a.as.integer + b.as.integer));
     } else if (a.type == VAL_TYPE_STRING && b.type == VAL_TYPE_STRING) {
-
+        push(s, add_strings(&a, &b));
     } else {
         // error
     }
