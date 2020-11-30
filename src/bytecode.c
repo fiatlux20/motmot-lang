@@ -16,28 +16,21 @@ static void grow_value_array(value_array *array, unsigned int new_size) {
         return;
     }
 
-    array->array = realloc(array->array, new_size * sizeof(value));
+    array->array = realloc(array->array, new_size * (sizeof *array->array));
     if (array->array == NULL) {
         fputs("error: unable to realloc array\n", stderr);
     }
-}
-
-value create_number(double n) {
-    value val;
-    val.type = T_NUMBER;
-    val.as.d = n;
-    return val;
 }
 
 value_array create_value_dynarray() {
     value_array array;
     array.elements = 0;
     array.capacity = DYNARRAY_INITIAL_SIZE;
-    array.array = malloc(sizeof(value) * DYNARRAY_INITIAL_SIZE);
+    array.array = malloc(DYNARRAY_INITIAL_SIZE * (sizeof *array.array));
     return array;
 }
 
-void append_to_value_dynarray(value_array *array, value val) {
+void append_to_value_dynarray(value_array *array, Value val) {
     if (array->elements == array->capacity) {
         array->capacity *= DYNARRAY_GROW_BY_FACTOR;
         grow_value_array(array, array->capacity);
@@ -134,7 +127,7 @@ void print_disassembly(bytecode_array *bytecode) {
         opcode_t op = bytecode->array[i];
         printf("%04d  ", i);
         if (op == OP_CONSTANT) {
-            printf("%02x CONSTANT (%lf)\n", op, bytecode->constants.array[constant_index++].as.d);
+            printf("%02x CONSTANT (%ld)\n", op, bytecode->constants.array[constant_index++].as.integer);
             i += 1;
         } else {
             print_opcode(bytecode->array[i]);

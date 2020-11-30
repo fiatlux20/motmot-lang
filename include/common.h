@@ -3,8 +3,8 @@
 
 #define DEBUG_VM
 #define DEBUG_STACK
-#undef DEBUG_TOKENS
-#undef DEBUG_PARSER
+#define DEBUG_TOKENS
+#define DEBUG_PARSER
 #define DEBUG_COMPILER
 
 #define INPUT_BUFFER_SIZE 1024

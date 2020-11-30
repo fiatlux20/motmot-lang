@@ -5,9 +5,9 @@
 
 #include "common.h"
 #include "tokens.h"
-#include "objects.h"
+#include "value.h"
 
-typedef uint8_t opcode_t;
+typedef unsigned char opcode_t;
 
 typedef enum {
     OP_RETURN,
@@ -19,7 +19,7 @@ typedef enum {
 } opcode;
 
 typedef struct {
-    value *array;
+    Value *array;
     uint32_t elements;
     uint32_t capacity;
 } value_array;
@@ -31,10 +31,6 @@ typedef struct {
     uint32_t capacity;
 } bytecode_array;
 
-/* value ops */
-value create_number(double n);
-// value create_string(char *str);
-// value create_long(long l);
 
 /* array ops */
 bytecode_array create_bytecode_dynarray();
@@ -44,7 +40,7 @@ opcode_t *next_opcode(bytecode_array *array, dynarray_iterator *iter);
 void free_bytecode_dynarray(bytecode_array *array);
 
 value_array create_value_dynarray();
-void append_to_value_dynarray(value_array *array, value val);
+void append_to_value_dynarray(value_array *array, Value val);
 void free_value_dynarray(value_array *array);
 
 #ifdef DEBUG_VM

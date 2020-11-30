@@ -2,7 +2,8 @@ IDIR := include
 SDIR := src
 ODIR := build
 CC := gcc
-CFLAGS := -I./$(IDIR) -Wall # -Og -g -fsanitize=address
+CWARNS := -Wall -Wshadow -pedantic -Wpointer-arith -Wcast-align -Waggregate-return
+CFLAGS := -I./$(IDIR) $(CWARNS) -Og -g -fsanitize=address
 
 HEADERS := $(wildcard $(IDIR)/*.h)
 SOURCES := $(wildcard $(SDIR)/*.c)

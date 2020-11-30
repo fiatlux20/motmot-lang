@@ -14,7 +14,7 @@
 typedef struct {
     unsigned int head;
     unsigned int size;
-    value *at;
+    Value *at;
 } vm_stack;
 
 typedef struct {

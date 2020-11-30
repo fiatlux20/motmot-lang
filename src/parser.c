@@ -107,7 +107,7 @@ void emit_opcode(bytecode_array *array, opcode_t opcode) {
     append_to_bytecode_dynarray(array, opcode);
 }
 
-void emit_constant(bytecode_array *array, value val) {
+void emit_constant(bytecode_array *array, Value val) {
     append_to_bytecode_dynarray(array, OP_CONSTANT);
     append_to_bytecode_dynarray(array, array->constants.elements); // index of constant
     append_to_value_dynarray(&(array->constants), val);
@@ -206,7 +206,7 @@ static void expression(parser_state *s) {
 
     switch (t->type) {
     case T_NUMBER:
-        emit_constant(s->bytecode, create_number(atof(t->value)));
+        emit_constant(s->bytecode, double_value(atof(t->value)));
     case T_IDENTIFIER:
     case T_STRING:
  // case T_BOOLEAN:

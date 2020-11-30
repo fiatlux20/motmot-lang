@@ -4,69 +4,101 @@
 
 #include "vm.h"
 
-static void push(vm_stack *s, value val) {
-    if (s->head >= STACK_SIZE) {
-        s->head = 0;
-    }
-
-#ifdef DEBUG_STACK
-    printf("pushing %lf. stack head at %d\n", val.as.d, s->head);
-#endif
-    s->size++;
+static void push(vm_stack *s, Value val) {
+    s->head &= s->size - 1;
     s->at[s->head++] = val;
+#ifdef DEBUG_STACK
+    if (val.type == VAL_TYPE_DOUBLE) {
+        printf("pushing double '%lf'. stack head now at %d\n", val.as.real, s->head);
+    } else if (val.type == VAL_TYPE_INTEGER) {
+        printf("pushing int '%ld'. stack head now at %d\n", val.as.integer, s->head);
+    } else if (val.type == VAL_TYPE_STRING) {
+        printf("pushing string '%s'. stack head now at %d\n", val.as.string, s->head);
+    }
+#endif
 }
 
-static value pop(vm_stack *s) {
-    if (s->head < 0) {
-        s->head = STACK_SIZE - 1;
-    }
+static Value pop(vm_stack *s) {
+    s->head &= s->size - 1;
+    s->head--;
 
-    s->size--;
 #ifdef DEBUG_STACK
-    value val = s->at[--s->head];
-    printf("popping %lf. stack head at %d\n", val.as.d, s->head);
+    Value val = s->at[s->head];
+    if (val.type == VAL_TYPE_DOUBLE) {
+        printf("popping %lf. stack head now at %d\n", val.as.real, s->head);
+    } else if (val.type == VAL_TYPE_INTEGER) {
+        printf("popping %ld. stack head now at %d\n", val.as.integer, s->head);
+    } else if (val.type == VAL_TYPE_STRING) {
+        printf("popping %s. stack head now at %d\n", val.as.string, s->head);
+    }
 
     return val;
 #else
-    return s->at[--s->head];
+    return s->at[s->head];
 #endif
 }
 
 /* opcodes */
 static void op_add(vm_stack *s) {
-    value a = pop(s);
-    value b = pop(s);
+    Value a = pop(s);
+    Value b = pop(s);
 
-    push(s, create_number(a.as.d + b.as.d));
+    if (a.type == VAL_TYPE_INTEGER) {
+        printf("value a is of type int\n");
+    } else if (a.type == VAL_TYPE_DOUBLE) {
+        printf("value a is of type double: %lf\n", a.as.real);
+    }
+
+    if (b.type == VAL_TYPE_INTEGER) {
+        printf("value b is of type int\n");
+    } else if (b.type == VAL_TYPE_DOUBLE) {
+        printf("value b is of type double: %lf\n", b.as.real);
+    }
+
+    if (a.type == VAL_TYPE_DOUBLE && b.type == VAL_TYPE_DOUBLE) {
+        push(s, double_value(a.as.real + b.as.real));
+    } else if (a.type == VAL_TYPE_INTEGER && b.type == VAL_TYPE_INTEGER) {
+        push(s, int_value(a.as.integer + b.as.integer));
+    } else if (a.type == VAL_TYPE_STRING && b.type == VAL_TYPE_STRING) {
+
+    } else {
+        // error
+    }
 }
 
 static void op_sub(vm_stack *s) {
-    value a = pop(s);
-    value b = pop(s);
+    Value a = pop(s);
+    Value b = pop(s);
 
-    push(s, create_number(a.as.d - b.as.d));
+    if (a.type == VAL_TYPE_DOUBLE && b.type == VAL_TYPE_DOUBLE) {
+        push(s, double_value(a.as.real - b.as.real));
+    } else if (a.type == VAL_TYPE_INTEGER && b.type == VAL_TYPE_INTEGER) {
+        push(s, int_value(a.as.integer - b.as.integer));
+    } else {
+        // error
+    }
 }
 
 static void op_mult(vm_stack *s) {
-    value a = pop(s);
-    value b = pop(s);
+    Value a = pop(s);
+    Value b = pop(s);
 
-    push(s, create_number(a.as.d * b.as.d));
+    push(s, int_value(a.as.integer * b.as.integer));
 }
 
 static void op_div(vm_stack *s) {
-    value a = pop(s);
-    value b = pop(s);
+    Value a = pop(s);
+    Value b = pop(s);
 
-    push(s, create_number(b.as.d / a.as.d));
+    push(s, int_value(b.as.integer / a.as.integer));
 }
 
 
 static vm_stack initialize_stack() {
     vm_stack stack;
-    stack.at = malloc(STACK_SIZE * sizeof(value));
+    stack.at = malloc((sizeof *stack.at) * STACK_SIZE);
     stack.head = 0;
-    stack.size = 0;
+    stack.size = STACK_SIZE;
 
     return stack;
 }
@@ -131,11 +163,11 @@ void free_vm(virtual_machine *vm) {
 
 #ifdef DEBUG_STACK
 void print_stack(virtual_machine *vm) {
-    unsigned int size = vm->stack.size;
+    unsigned int top = vm->stack.head;
 
     fputs("--- Contents of stack ---\n", stdout);
-    for (int i = 0; i < size; i++) {
-        printf("%d: %lf\n", i, vm->stack.at[i].as.d);
+    for (int i = 0; i < top; i++) {
+        printf("%d: %lf\n", i, vm->stack.at[i].as.real);
     }
 }
 #endif /* DEBUG_STACK */
