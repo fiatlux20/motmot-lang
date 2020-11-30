@@ -164,10 +164,13 @@ void free_vm(virtual_machine *vm) {
 #ifdef DEBUG_STACK
 void print_stack(virtual_machine *vm) {
     unsigned int top = vm->stack.head;
+    Value *v = vm->stack.at;
 
     fputs("--- Contents of stack ---\n", stdout);
     for (int i = 0; i < top; i++) {
-        printf("%d: %lf\n", i, vm->stack.at[i].as.real);
+        printf("%02x: ", i);
+        print_value(v++);
+        printf("\n");
     }
 }
 #endif /* DEBUG_STACK */

@@ -43,7 +43,7 @@ Value add_strings(Value *s1, Value *s2) {
     v.as.string = malloc((len1 + len2 + 1) * (sizeof *v.as.string));
 
     memcpy(v.as.string, s2->as.string, len2);
-    memcpy(v.as.string + len1, s1->as.string, len1);
+    memcpy(v.as.string + len2, s1->as.string, len1);
     v.as.string[len1 + len2] = '\0';
 
     return v;
