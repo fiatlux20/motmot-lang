@@ -56,12 +56,6 @@ static unsigned int is_value(token *t) {
     return type == T_IDENTIFIER || type == T_NUMBER || type == T_STRING;
 }
 
-static void report_error(const char *error_type, const char *message) {
-    fprintf(stderr, "\033[0;31m%s\033[0m: ", error_type);
-    fputs(message, stderr);
-    fputs("\n", stderr);
-}
-
 static unsigned int accept(token *t, unsigned int token_type) {
     if (t == NULL) {
         return 0;
@@ -103,6 +97,17 @@ static unsigned int expect_value(parser_state *s) {
 }
 
 /* bytecode functions */
+void index_of(name_array *names, char *str, int *ind) {
+    for (unsigned int i = 0; i < names->elements; i++) {
+        if (strcmp(names->array[i], str) == 0) {
+            printf("found %s at %d\n", str, i);
+            *ind = i;
+            return;
+        }
+    }
+
+    *ind = -1;
+}
 void emit_opcode(bytecode_array *array, opcode_t opcode) {
     append_to_bytecode_dynarray(array, opcode);
 }
@@ -111,6 +116,35 @@ void emit_constant(bytecode_array *array, Value val) {
     append_to_bytecode_dynarray(array, OP_CONSTANT);
     append_to_bytecode_dynarray(array, array->constants.elements); // index of constant
     append_to_value_dynarray(&(array->constants), val);
+}
+
+void emit_set_name(bytecode_array *array, char *str) {
+    int ind = -1;
+    index_of(array->names, str, &ind);
+    append_to_bytecode_dynarray(array, OP_SET_GLOBAL);
+
+    if (ind == -1) {
+        printf("making new name\n");
+        append_to_bytecode_dynarray(array, array->names->elements); // index of constant
+        append_to_name_dynarray(array->names, str);    
+    } else {
+        append_to_bytecode_dynarray(array, ind);
+    }
+
+}
+
+void emit_get_name(bytecode_array *array, char *str) {
+    int ind = -1;
+    index_of(array->names, str, &ind);
+    append_to_bytecode_dynarray(array, OP_GET_GLOBAL);
+
+    if (ind == -1) {
+        printf("making new name\n");
+        append_to_bytecode_dynarray(array, array->names->elements); // index of constant
+        append_to_name_dynarray(array->names, str);    
+    } else {
+        append_to_bytecode_dynarray(array, ind);
+    }
 }
 
 /* matching groups */
@@ -210,6 +244,8 @@ static void expression(parser_state *s) {
         next_token(s->tokens, s->iter);
         break;
     case T_IDENTIFIER:
+        emit_get_name(s->bytecode, t->value);
+        next_token(s->tokens, s->iter);
         break;
     case T_STRING:
         emit_constant(s->bytecode, string_value(t->value));
@@ -244,9 +280,12 @@ static void expression(parser_state *s) {
 
 static void assignment(parser_state *s) {
     expect(s, T_VAR);
+    token *name = current_token(s->tokens, s->iter);
     expect(s, T_IDENTIFIER);
     expect(s, T_EQL);
     expression(s);
+
+    emit_set_name(s->bytecode, name->value);
 }
 
 static void statement(parser_state *s) {
@@ -298,9 +337,11 @@ static void if_statement(parser_state *s) {
 }
 
 /* public functions */
-bytecode_array parse(token_dynamic_array *tokens) {
+bytecode_array parse(virtual_machine *vm, token_dynamic_array *tokens) {
     dynarray_iterator iter = { tokens->count, 0 };
     bytecode_array bytecode = create_bytecode_dynarray();
+    bytecode.names = &vm->names;
+
     parser_state s;
     s.tokens = tokens;
     s.bytecode = &bytecode;

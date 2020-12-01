@@ -83,14 +83,26 @@ static void op_mult(vm_stack *s) {
     Value a = pop(s);
     Value b = pop(s);
 
-    push(s, int_value(a.as.integer * b.as.integer));
+    if (a.type == VAL_TYPE_DOUBLE && b.type == VAL_TYPE_DOUBLE) {
+        push(s, double_value(a.as.real * b.as.real));
+    } else if (a.type == VAL_TYPE_INTEGER && b.type == VAL_TYPE_INTEGER) {
+        push(s, int_value(a.as.integer * b.as.integer));
+    } else {
+        // error
+    }
 }
 
 static void op_div(vm_stack *s) {
     Value a = pop(s);
     Value b = pop(s);
 
-    push(s, int_value(b.as.integer / a.as.integer));
+    if (a.type == VAL_TYPE_DOUBLE && b.type == VAL_TYPE_DOUBLE) {
+        push(s, double_value(b.as.real / a.as.real));
+    } else if (a.type == VAL_TYPE_INTEGER && b.type == VAL_TYPE_INTEGER) {
+        push(s, int_value(b.as.integer / a.as.integer));
+    } else {
+        // error
+    }
 }
 
 
@@ -111,6 +123,8 @@ static void free_stack(vm_stack *s) {
 virtual_machine initialize_vm() {
     virtual_machine vm;
     vm.stack = initialize_stack();
+    vm.names = create_name_dynarray();
+    vm.env = init_table();
     vm.ip = 0;
     vm.state = 0;
     return vm;
@@ -127,6 +141,7 @@ unsigned int execute(virtual_machine *vm, bytecode_array *bytecode) {
 
     uint8_t *ip = bytecode->array;
     unsigned int size = bytecode->elements;
+    Entry *var;
 
     for (int i = 0; i < size; i++) {
         switch (bytecode->array[i]) {
@@ -134,6 +149,22 @@ unsigned int execute(virtual_machine *vm, bytecode_array *bytecode) {
             goto end;
         case OP_CONSTANT:
             push(&vm->stack, bytecode->constants.array[bytecode->array[i + 1]]);
+            i++;
+            break;
+        case OP_GET_GLOBAL:
+            var = get_entry(vm->env, vm->names.array[bytecode->array[i + 1]]);
+            if (var != NULL) {
+                push(&vm->stack, get_entry(vm->env, vm->names.array[bytecode->array[i + 1]])->value);
+            } else {
+                report_error("RuntimeError",
+                        "variable '%s' not found",
+                        vm->names.array[bytecode->array[i+1]]);
+                goto end;
+            }
+            i++;
+            break;
+        case OP_SET_GLOBAL:
+            add_entry(vm->env, vm->names.array[bytecode->array[i + 1]], pop(&vm->stack));
             i++;
             break;
         case OP_ADD:
@@ -154,11 +185,17 @@ unsigned int execute(virtual_machine *vm, bytecode_array *bytecode) {
         }
     }
 end:
+#ifdef DEBUG_TABLE
+    printf("--- contents of env ---\n");
+    print_table(vm->env);
+#endif /* DEBUG_TABLE */
     return 0;
 }
 
 void free_vm(virtual_machine *vm) {
     free_stack(&vm->stack);
+    free_name_dynarray(&vm->names);
+    free_table(vm->env);
 }
 
 #ifdef DEBUG_STACK

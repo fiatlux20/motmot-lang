@@ -1,8 +1,10 @@
 #ifndef _VM_H_
 #define _VM_H_
 
-#include "common.h"
 #include "bytecode.h"
+#include "common.h"
+#include "error.h"
+#include "table.h"
 
 #define BINARY_OP(op)     \
     do {                  \
@@ -19,6 +21,8 @@ typedef struct {
 
 typedef struct {
     vm_stack stack;
+    name_array names;
+    HashTable *env;
     int ip;
     int state;
 } virtual_machine;

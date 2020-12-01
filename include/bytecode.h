@@ -12,6 +12,8 @@ typedef unsigned char opcode_t;
 typedef enum {
     OP_RETURN,
     OP_CONSTANT,
+    OP_GET_GLOBAL,
+    OP_SET_GLOBAL,
     OP_ADD,
     OP_SUB,
     OP_MULT,
@@ -25,8 +27,15 @@ typedef struct {
 } value_array;
 
 typedef struct {
+    char **array;
+    uint32_t elements;
+    uint32_t capacity;
+} name_array;
+
+typedef struct {
     uint8_t *array;
     value_array constants;
+    name_array *names;
     uint32_t elements;
     uint32_t capacity;
 } bytecode_array;
@@ -43,8 +52,14 @@ value_array create_value_dynarray();
 void append_to_value_dynarray(value_array *array, Value val);
 void free_value_dynarray(value_array *array);
 
+name_array create_name_dynarray();
+void append_to_name_dynarray(name_array *array, char *val);
+void free_name_dynarray(name_array *array);
+
 #ifdef DEBUG_VM
 void print_disassembly(bytecode_array *bytecode);
+void print_constants(bytecode_array *bytecode);
+void print_names(bytecode_array *bytecode);
 #endif /* DEBUG_VM */
 
 #endif /* _BYTECODE_H_ */

@@ -2,7 +2,10 @@
 #define _GRAMMAR_H_
 
 #include "bytecode.h"
+#include "common.h"
+#include "error.h"
 #include "tokens.h"
+#include "vm.h"
 
 /*
   expression     → equality ;
@@ -52,6 +55,6 @@ typedef struct {
     unsigned int error;
 } parser_state;
 
-bytecode_array parse(token_dynamic_array *tokens);
+bytecode_array parse(virtual_machine *vm, token_dynamic_array *tokens);
 
 #endif /* GRAMMAR_H_ */

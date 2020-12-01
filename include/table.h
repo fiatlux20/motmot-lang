@@ -36,5 +36,8 @@ void add_entry(HashTable *table, char *key, Value value);
 void update_entry(HashTable *table, char *key, Value value);
 Entry *get_entry(HashTable *table, char *key);
 void del_entry(HashTable *table, char *key);
+#ifdef DEBUG_TABLE
+void print_table(HashTable *table);
+#endif /* DEBUG_TABLE */
 
 #endif /* _TABLE_H_*/

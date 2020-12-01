@@ -141,3 +141,13 @@ void free_table(HashTable *table) {
     free(table);
     table = NULL;
 }
+
+#ifdef DEBUG_TABLE
+void print_table(HashTable *table) {
+    for (unsigned int i = 0; i < table->capacity; i++) {
+        printf("%s:  ", table->entries[i].key);
+        print_value(&table->entries[i].value);
+        printf("\n");
+    }
+}
+#endif /* DEBUG_TABLE */

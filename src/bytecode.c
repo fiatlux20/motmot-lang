@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "bytecode.h"
 
@@ -10,6 +11,7 @@ static void grow_bytecode_array(bytecode_array *array, unsigned int new_size) {
     }
 }
 
+/* value array */
 static void grow_value_array(value_array *array, unsigned int new_size) {
     if (new_size > MAX_CHUNK_CONSTANTS) {
         fputs("error: constants overflow\n", stderr);
@@ -49,16 +51,70 @@ void free_value_dynarray(value_array *array) {
     array->array = NULL;
 }
 
+/* names array */
+static void grow_name_array(name_array *array, unsigned int new_size) {
+    if (new_size > MAX_CHUNK_NAMES) {
+        fputs("error: names overflow\n", stderr);
+        return;
+    }
+
+    array->array = realloc(array->array, new_size * (sizeof *array->array));
+    if (array->array == NULL) {
+        fputs("error: unable to realloc array\n", stderr);
+    }
+}
+
+name_array create_name_dynarray() {
+    name_array array;
+    array.elements = 0;
+    array.capacity = DYNARRAY_INITIAL_SIZE;
+    array.array = calloc(DYNARRAY_INITIAL_SIZE, (sizeof *array.array));
+    return array;
+}
+
+void append_to_name_dynarray(name_array *array, char *val) {
+    if (array->elements == array->capacity) {
+        array->capacity *= DYNARRAY_GROW_BY_FACTOR;
+        grow_name_array(array, array->capacity);
+
+        if (array->array == NULL) {
+            printf("got NULL while performing array realloc\n");
+            return;
+        }
+    }
+
+    unsigned int len = strlen(val);
+    array->array[array->elements] = malloc(len + 1);
+    memcpy(array->array[array->elements], val, len);
+    array->array[array->elements][len] = '\0';
+    array->elements++;
+}
+
+void free_name_dynarray(name_array *array) {
+    for (unsigned int i = 0; i < array->elements; i++) {
+        free(array->array[i]);
+        array->array[i] = NULL;
+    }
+
+    free(array->array);
+    array->array = NULL;
+}
+
+/* bytecode chunk */
 bytecode_array create_bytecode_dynarray() {
     bytecode_array array;
     array.elements = 0;
     array.capacity = DYNARRAY_INITIAL_SIZE;
     array.array = malloc(sizeof(uint8_t) * DYNARRAY_INITIAL_SIZE);
     array.constants = create_value_dynarray();
+    // array.names = create_name_dynarray(); // handled by vm
     return array;
 }
 
 void append_to_bytecode_dynarray(bytecode_array *array, opcode_t op) {
+    if (array == NULL) {
+        printf("WTF\n");
+    }
     if (array->elements == array->capacity) {
         array->capacity *= DYNARRAY_GROW_BY_FACTOR;
         grow_bytecode_array(array, array->capacity);
@@ -86,6 +142,7 @@ opcode_t *next_opcode(bytecode_array *array, dynarray_iterator *iter) {
 
 void free_bytecode_dynarray(bytecode_array *array) {
     free_value_dynarray(&array->constants);
+    // free_name_dynarray(&array->names); // handled by vm
     free(array->array);
     array->array = NULL;
 }
@@ -95,6 +152,8 @@ static void print_opcode(opcode_t opcode) {
     switch(opcode) {
     case OP_RETURN: printf("%02x RETURN\n", opcode); break;
     case OP_CONSTANT: printf("%02x CONSTANT\n", opcode); break;
+    case OP_GET_GLOBAL: printf("%02x GET_GLOBAL\n", opcode); break;
+    case OP_SET_GLOBAL: printf("%02x SET_GLOBAL\n", opcode); break;
     case OP_ADD: printf("%02x ADD\n", opcode); break;
     case OP_SUB: printf("%02x SUB\n", opcode); break;
     case OP_MULT: printf("%02x MULT\n", opcode); break;
@@ -120,20 +179,51 @@ static void print_opcode(opcode_t opcode) {
 
 void print_disassembly(bytecode_array *bytecode) {
     unsigned int length = bytecode->elements;
-    unsigned int constant_index = 0;
+    Value *v;
 
     fputs("---- disassembly ----\n", stdout);
     for (unsigned int i = 0; i < length; i++) {
         opcode_t op = bytecode->array[i];
         printf("%04d  ", i);
-        if (op == OP_CONSTANT) {
-            Value *v = &bytecode->constants.array[constant_index++];
+        switch (op) {
+        case OP_CONSTANT:
+            v = &bytecode->constants.array[bytecode->array[i + 1]];
             printf("%02x CONSTANT (", op);
             print_value(v);
             printf(")\n");
-            i += 1;
-        } else {
+            i++;
+            break;
+        case OP_GET_GLOBAL:
+            printf("%02x GET_GLOBAL (%s)\n", op, bytecode->names->array[bytecode->array[i + 1]]);
+            i++;
+            break;
+        case OP_SET_GLOBAL:
+            printf("%02x SET_GLOBAL (%s)\n", op, bytecode->names->array[bytecode->array[i + 1]]);
+            i++;
+            break;
+        default:
             print_opcode(bytecode->array[i]);
+        }
+    }
+}
+
+void print_constants(bytecode_array *bytecode) {
+    fputs("---- constants ----\n", stdout);
+
+    for (unsigned int i = 0; i < bytecode->constants.capacity; i++) {
+        printf("%d: ", i);
+        print_value(&bytecode->constants.array[i]);
+        printf("\n");
+    }
+}
+
+void print_names(bytecode_array *bytecode) {
+    fputs("---- names ----\n", stdout);
+
+    printf("# elements = %d\n", bytecode->names->elements);
+    for (unsigned int i = 0; i < bytecode->names->capacity; i++) {
+        if (bytecode->names->array[i] != NULL) {
+            printf("%d: %s\n", i, bytecode->names->array[i]);
         }
     }
 }
