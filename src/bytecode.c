@@ -58,10 +58,17 @@ static void grow_name_array(name_array *array, unsigned int new_size) {
         return;
     }
 
-    array->array = realloc(array->array, new_size * (sizeof *array->array));
+    char **old_array = array->array;
+    array->array = calloc(sizeof *array->array, new_size);
     if (array->array == NULL) {
         fputs("error: unable to realloc array\n", stderr);
     }
+
+    for (unsigned int i = 0; i < array->elements; i++) {
+        array->array[i] = old_array[i];
+    }
+
+    free(old_array);
 }
 
 name_array create_name_dynarray() {
