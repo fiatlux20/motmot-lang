@@ -100,7 +100,6 @@ static unsigned int expect_value(parser_state *s) {
 void index_of(name_array *names, char *str, int *ind) {
     for (unsigned int i = 0; i < names->elements; i++) {
         if (strcmp(names->array[i], str) == 0) {
-            printf("found %s at %d\n", str, i);
             *ind = i;
             return;
         }
@@ -124,7 +123,20 @@ void emit_set_name(bytecode_array *array, char *str) {
     append_to_bytecode_dynarray(array, OP_SET_GLOBAL);
 
     if (ind == -1) {
-        printf("making new name\n");
+        append_to_bytecode_dynarray(array, array->names->elements); // index of constant
+        append_to_name_dynarray(array->names, str);    
+    } else {
+        append_to_bytecode_dynarray(array, ind);
+    }
+
+}
+
+void emit_update_name(bytecode_array *array, char *str) {
+    int ind = -1;
+    index_of(array->names, str, &ind);
+    append_to_bytecode_dynarray(array, OP_UPDATE_GLOBAL);
+
+    if (ind == -1) {
         append_to_bytecode_dynarray(array, array->names->elements); // index of constant
         append_to_name_dynarray(array->names, str);    
     } else {
@@ -139,7 +151,6 @@ void emit_get_name(bytecode_array *array, char *str) {
     append_to_bytecode_dynarray(array, OP_GET_GLOBAL);
 
     if (ind == -1) {
-        printf("making new name\n");
         append_to_bytecode_dynarray(array, array->names->elements); // index of constant
         append_to_name_dynarray(array->names, str);    
     } else {
@@ -290,6 +301,7 @@ static void assignment(parser_state *s) {
 
 static void statement(parser_state *s) {
     token *t = current_token(s->tokens, s->iter);
+    token *temp;
 
     if (t == NULL) {
         return;
@@ -305,6 +317,15 @@ static void statement(parser_state *s) {
     case T_LCURLY:
         block(s);
         return;
+    case T_IDENTIFIER:
+        if (peek_next_token(s->tokens, s->iter)->type == T_EQL) {
+            temp = current_token(s->tokens, s->iter);
+            next_token(s->tokens, s->iter);
+            next_token(s->tokens, s->iter);
+            expression(s);
+            emit_update_name(s->bytecode, temp->value);
+            next_token(s->tokens, s->iter);
+        }
     default:
         expression(s);
         if (s->error != 0) {

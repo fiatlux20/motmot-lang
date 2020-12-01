@@ -43,6 +43,7 @@ static void op_add(vm_stack *s) {
     Value a = pop(s);
     Value b = pop(s);
 
+#ifdef DEBUG_STACK
     if (a.type == VAL_TYPE_INTEGER) {
         printf("value a is of type int\n");
     } else if (a.type == VAL_TYPE_DOUBLE) {
@@ -54,6 +55,7 @@ static void op_add(vm_stack *s) {
     } else if (b.type == VAL_TYPE_DOUBLE) {
         printf("value b is of type double: %lf\n", b.as.real);
     }
+#endif /* DEBUG_STACK */
 
     if (a.type == VAL_TYPE_DOUBLE && b.type == VAL_TYPE_DOUBLE) {
         push(s, double_value(a.as.real + b.as.real));
@@ -167,6 +169,18 @@ unsigned int execute(virtual_machine *vm, bytecode_array *bytecode) {
             add_entry(vm->env, vm->names.array[bytecode->array[i + 1]], pop(&vm->stack));
             i++;
             break;
+        case OP_UPDATE_GLOBAL:
+            var = get_entry(vm->env, vm->names.array[bytecode->array[i + 1]]);
+            if (var != NULL) {
+                var->value = pop(&vm->stack);
+            } else {
+                report_error("RuntimeError",
+                        "variable '%s' not found",
+                        vm->names.array[bytecode->array[i+1]]);
+                goto end;
+            }
+            i++;
+            break;
         case OP_ADD:
             op_add(&vm->stack);
             break;
@@ -185,6 +199,12 @@ unsigned int execute(virtual_machine *vm, bytecode_array *bytecode) {
         }
     }
 end:
+
+    if (vm->stack.head != 0) {
+        Value v = pop(&vm->stack);
+        print_value(&v);
+        printf("\n");
+    }
 #ifdef DEBUG_TABLE
     printf("--- contents of env ---\n");
     print_table(vm->env);

@@ -14,6 +14,7 @@ typedef enum {
     OP_CONSTANT,
     OP_GET_GLOBAL,
     OP_SET_GLOBAL,
+    OP_UPDATE_GLOBAL,
     OP_ADD,
     OP_SUB,
     OP_MULT,

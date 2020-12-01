@@ -197,6 +197,10 @@ void print_disassembly(bytecode_array *bytecode) {
             printf("%02x GET_GLOBAL (%s)\n", op, bytecode->names->array[bytecode->array[i + 1]]);
             i++;
             break;
+        case OP_UPDATE_GLOBAL:
+            printf("%02x UPDATE_GLOBAL (%s)\n", op, bytecode->names->array[bytecode->array[i + 1]]);
+            i++;
+            break;
         case OP_SET_GLOBAL:
             printf("%02x SET_GLOBAL (%s)\n", op, bytecode->names->array[bytecode->array[i + 1]]);
             i++;

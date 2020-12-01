@@ -1,12 +1,12 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
-#define DEBUG_VM
-#define DEBUG_STACK
+#undef DEBUG_VM
+#undef DEBUG_STACK
 #undef DEBUG_TOKENS
 #undef DEBUG_PARSER
-#define DEBUG_COMPILER
-#define DEBUG_TABLE
+#undef DEBUG_COMPILER
+#undef DEBUG_TABLE
 
 #define INPUT_BUFFER_SIZE 1024
 #define STACK_SIZE 1024
