@@ -1,10 +1,14 @@
+MAJOR_VERS := 0
+MINOR_VERS := 1
+
 IDIR := include
 SDIR := src
 ODIR := build
 OUT_FILE := interp
 CC := gcc
 CWARNS := -Wall -Wshadow -pedantic -Wpointer-arith -Wcast-align # -Waggregate-return
-CFLAGS := -I./$(IDIR) $(CWARNS) -Og -g -fsanitize=address
+DEFINES := -DMAJOR_VERS=$(MAJOR_VERS) -DMINOR_VERS=$(MINOR_VERS)
+CFLAGS := -I./$(IDIR) $(CWARNS) $(DEFINES) -Og -g -fsanitize=address
 
 HEADERS := $(wildcard $(IDIR)/*.h)
 SOURCES := $(wildcard $(SDIR)/*.c)

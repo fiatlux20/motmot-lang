@@ -49,7 +49,10 @@ int run(virtual_machine *vm, char *source) {
 
 int run_interactive() {
     virtual_machine vm = initialize_vm();
-    fputs("Running in interpreter mode.\n", stdout);
+#ifdef MAJOR_VERS
+    printf("Motmot v%d.%d ", MAJOR_VERS, MINOR_VERS);
+#endif
+    fputs("Running in interactive mode.\n", stdout);
     char input[INPUT_BUFFER_SIZE];
 
     for (;;) {
