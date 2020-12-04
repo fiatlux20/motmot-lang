@@ -34,7 +34,8 @@
     } while (0)
 
 #define TEST_FAIL() \
-    test_code = 1;
+    test_code = 1; \
+    overall_code = 1;
 
 #define BEGIN_TEST_CASE(description) \
     do { \
@@ -49,12 +50,13 @@
 
 #define INIT_TEST() \
     int test_code = 0; \
+    int overall_code = 0; \
     printf("%d:%s\n", __LINE__, __func__);
 
 #define END_TEST() \
-    if (test_code == 0) printf("%s PASSED\n", __func__); \
+    if (overall_code == 0) printf("%s PASSED\n", __func__); \
     else printf("%s FAILED\n", __func__); \
-    return test_code;
+    return overall_code;
 
 int test_ht_add_entry() {
     INIT_TEST();
@@ -121,7 +123,7 @@ int test_ht_resize() {
     }
 
     BEGIN_TEST_CASE("Table capacity greater than initial capacity");
-    if (table->capacity <= initial_capacity) {
+    if (table->capacity >= initial_capacity) {
         TEST_FAIL();
     }
     END_TEST_CASE();
