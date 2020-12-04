@@ -23,8 +23,8 @@ $(OUT_FILE): $(OBJ)
 $(ODIR):
 	mkdir $(ODIR)
 
-test: tests/test_tables.c
-	$(CC) tests/test_tables.c $(SDIR)/table.c $(SDIR)/value.c $(CFLAGS) -o $@
+test: tests/test.c
+	$(CC) tests/test.c $(SDIR)/table.c $(SDIR)/value.c $(CFLAGS) -o $@
 
 .PHONY: clean
 clean:
