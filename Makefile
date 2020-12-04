@@ -5,6 +5,7 @@ IDIR := include
 SDIR := src
 ODIR := build
 OUT_FILE := interp
+TEST_FILE := test
 CC := gcc
 CWARNS := -Wall -Wshadow -Wpointer-arith -Wcast-align -Wstrict-aliasing=1 # -Waggregate-return
 DEFINES := -DMAJOR_VERS=$(MAJOR_VERS) -DMINOR_VERS=$(MINOR_VERS)
@@ -23,10 +24,11 @@ $(OUT_FILE): $(OBJ)
 $(ODIR):
 	mkdir $(ODIR)
 
-test: tests/test.c
+$(TEST_FILE): tests/test.c
 	$(CC) tests/test.c $(SDIR)/table.c $(SDIR)/value.c $(CFLAGS) -o $@
 
 .PHONY: clean
 clean:
-	rm $(OUT_FILE)
-	rm -r $(ODIR)
+	rm -f $(OUT_FILE)
+	rm -f $(TEST_FILE)
+	rm -rf $(ODIR)

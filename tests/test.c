@@ -5,23 +5,58 @@
 #include "table.h"
 #include "value.h"
 
+/* writing tests:
+ *
+ * test functions should take no arguments and return an int, e.g.
+ * int test_hash_table()
+ *
+ * a test function should begin with INIT_TEST() and end with END_TEST()
+ *
+ * within a test function, test cases can be created by enclosing them
+ * within BEGIN_TEST_CASE(description) and END_TEST_CASE(). a test case
+ * can be signaled to fail with the TEST_FAIL() macro, otherwise when
+ * it reaches END_TEST_CASE() the test will be reported as successful
+ * e.g.
+ * BEGIN_TEST_CASE("x is 1")
+ * if (x != 1) TEST_FAIL();
+ * END_TEST_CASE();
+ *
+ * when calling a test function from main, use TEST(testfn, description)
+ * to call the test and supply a description of what the test does overall
+ */
+
 #define PASSED_TEST 0
 
 #define TEST(testfn, description) \
     do { \
-        int ret = 0; \
-        if ((ret = testfn()) == PASSED_TEST) printf("%d: PASSED: %s\n", __LINE__, description); \
-        else printf("%d: FAILED: %s\n    TEST RETURNED: %d\n", __LINE__, description, ret); \
-    } while (0);
+        printf("TEST %d: %s - ", __LINE__, description); \
+        testfn(); \
+    } while (0)
 
-#define TEST_EQUALS_INT(testfn, expected, description) \
+#define TEST_FAIL() \
+    test_code = 1;
+
+#define BEGIN_TEST_CASE(description) \
     do { \
-        int ret = 0; \
-        if ((ret = testfn()) == expected) printf("PASSED: %s\n", description); \
-        else printf("FAILED: %s\n    EXPECTED: %d, GOT: %d\n", description, expected, ret); \
-    } while (0);
+        int line = __LINE__; \
+        const char *test_desc = description;
+
+#define END_TEST_CASE() \
+    if (test_code == 0) printf("    %d:PASSED %s\n", line, test_desc); \
+    else printf("    %d:FAILED %s\n", line, test_desc); \
+    } while (0)
+
+#define INIT_TEST() \
+    int test_code = 0; \
+    printf("%d:%s\n", __LINE__, __func__);
+
+#define END_TEST() \
+    if (test_code == 0) printf("%s PASSED\n", __func__); \
+    else printf("%s FAILED\n", __func__); \
+    return test_code;
 
 int test_ht_add_entry() {
+    INIT_TEST();
     HashTable *table = init_table();
 
     char *keys[3];
@@ -35,17 +70,28 @@ int test_ht_add_entry() {
         add_entry(table, keys[i], string_value(vals[i]));
     }
 
+    BEGIN_TEST_CASE("No queried entries are NULL");
     for (unsigned int i = 0; i < 3; i++) {
         Entry *e = get_entry(table, keys[i]);
 
         if (e == NULL) {
-            return 1;
+            TEST_FAIL();
+            break;
         }
 
+    }
+    END_TEST_CASE();
+
+    BEGIN_TEST_CASE("Queried entry strings are equal to their intial strings");
+    for (unsigned int i = 0; i < 3; i++) {
+        Entry *e = get_entry(table, keys[i]);
+
         if (strcmp(e->value.as.string, vals[i]) != 0) {
-            return 2;
+            TEST_FAIL();
+            break;
         }
     }
+    END_TEST_CASE();
 
     free_table(table);
     for (unsigned int i = 0; i < 3; i++) {
@@ -53,11 +99,14 @@ int test_ht_add_entry() {
         free(vals[i]);
     }
 
-    return PASSED_TEST;
+    END_TEST();
 }
 
 int test_ht_resize() {
+    INIT_TEST();
     HashTable *table = init_table();
+
+    int initial_capacity = table->capacity;
 
     char *keys[8];
     char *vals[8];
@@ -70,21 +119,29 @@ int test_ht_resize() {
         add_entry(table, keys[i], string_value(vals[i]));
     }
 
-    if (table->capacity <= 8) {
-        return 3; /* table didn't resize itself */
+    BEGIN_TEST_CASE("Table capacity greater than initial capacity");
+    if (table->capacity <= initial_capacity) {
+        TEST_FAIL();
     }
+    END_TEST_CASE();
 
+    BEGIN_TEST_CASE("get_entry doesn't return NULL after resize");
     for (unsigned int i = 0; i < 8; i++) {
         Entry *e = get_entry(table, keys[i]);
-
         if (e == NULL) {
-            return 1; /* got null while querying for key */
-        }
-
-        if (strcmp(e->value.as.string, vals[i]) != 0) {
-            return 2; /* value returned not equal to original value */
+            TEST_FAIL();
         }
     }
+    END_TEST_CASE();
+
+    BEGIN_TEST_CASE("get_entry returns correct strings after resize");
+    for (unsigned int i = 0; i < 8; i++) {
+        Entry *e = get_entry(table, keys[i]);
+        if (strcmp(e->value.as.string, vals[i]) != 0) {
+            TEST_FAIL();
+        }
+    }
+    END_TEST_CASE();
 
     free_table(table);
     for (unsigned int i = 0; i < 8; i++) {
@@ -92,7 +149,7 @@ int test_ht_resize() {
         free(vals[i]);
     }
 
-    return PASSED_TEST;
+    END_TEST();
 }
 
 int main() {
