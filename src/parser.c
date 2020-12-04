@@ -33,7 +33,7 @@
  */
 
 
-static unsigned int operator(token *t) {
+static unsigned int operator(Token *t) {
     if (t == NULL) {
         return 0;
     }
@@ -46,7 +46,7 @@ static unsigned int operator(token *t) {
         || type == T_BANG;
 }
 
-static unsigned int is_value(token *t) {
+static unsigned int is_value(Token *t) {
     if (t == NULL) {
         return 0;
     }
@@ -56,7 +56,7 @@ static unsigned int is_value(token *t) {
     return type == T_IDENTIFIER || type == T_NUMBER || type == T_STRING;
 }
 
-static unsigned int accept(token *t, unsigned int token_type) {
+static unsigned int accept(Token *t, unsigned int token_type) {
     if (t == NULL) {
         return 0;
     }
@@ -64,7 +64,7 @@ static unsigned int accept(token *t, unsigned int token_type) {
 }
 
 static unsigned int expect(parser_state *s, unsigned int token_type) {
-    token *t = current_token(s->tokens, s->iter);
+    Token *t = current_token(s->tokens, s->iter);
     if (t == NULL || t->type != token_type) {
         s->error = 1;
         return 0;
@@ -75,7 +75,7 @@ static unsigned int expect(parser_state *s, unsigned int token_type) {
 }
 
 static unsigned int expect_operator(parser_state *s) {
-    token *t = current_token(s->tokens, s->iter);
+    Token *t = current_token(s->tokens, s->iter);
     if (t == NULL || !operator(t)) {
         s->error = 1;
         return 0;
@@ -86,7 +86,7 @@ static unsigned int expect_operator(parser_state *s) {
 }
 
 static unsigned int expect_value(parser_state *s) {
-    token *t = current_token(s->tokens, s->iter);
+    Token *t = current_token(s->tokens, s->iter);
     if (t == NULL || !is_value(t)) {
         s->error = 1;
         return 0;
@@ -172,7 +172,7 @@ static void binary(parser_state *s) {
     printf("in binary\n");
     #endif
 
-    token *operator = current_token(s->tokens, s->iter);
+    Token *operator = current_token(s->tokens, s->iter);
 
     expect_operator(s);
     expression(s);
@@ -234,7 +234,7 @@ static void expression(parser_state *s) {
     printf("in expression\n");
     #endif
 
-    token *t = current_token(s->tokens, s->iter);
+    Token *t = current_token(s->tokens, s->iter);
     if (t == NULL) {
         return;
     }
@@ -244,7 +244,7 @@ static void expression(parser_state *s) {
         return;
     }
 
-    token *next = peek_next_token(s->tokens, s->iter);
+    Token *next = peek_next_token(s->tokens, s->iter);
     if (next == NULL) {
         return;
     }
@@ -291,7 +291,7 @@ static void expression(parser_state *s) {
 
 static void assignment(parser_state *s) {
     expect(s, T_VAR);
-    token *name = current_token(s->tokens, s->iter);
+    Token *name = current_token(s->tokens, s->iter);
     expect(s, T_IDENTIFIER);
     expect(s, T_EQL);
     expression(s);
@@ -300,8 +300,8 @@ static void assignment(parser_state *s) {
 }
 
 static void statement(parser_state *s) {
-    token *t = current_token(s->tokens, s->iter);
-    token *temp;
+    Token *t = current_token(s->tokens, s->iter);
+    Token *temp;
 
     if (t == NULL) {
         return;
@@ -358,7 +358,7 @@ static void if_statement(parser_state *s) {
 }
 
 /* public functions */
-bytecode_array parse(virtual_machine *vm, token_dynamic_array *tokens) {
+bytecode_array parse(virtual_machine *vm, TokenArray *tokens) {
     dynarray_iterator iter = { tokens->count, 0 };
     bytecode_array bytecode = create_bytecode_dynarray();
     bytecode.names = &vm->names;

@@ -5,7 +5,7 @@
 
 
 /* public token ops */
-void print_token(token *token) {
+void print_token(Token *token) {
     if (token == NULL) {
         printf("NULL TOKEN\n");
         return;
@@ -77,8 +77,8 @@ void print_token(token *token) {
     }
 }
 
-token create_token() {
-    token t;
+Token create_token() {
+    Token t;
     t.value = NULL;
     t.type = T_NONE;
     t.line = 0;
@@ -86,15 +86,15 @@ token create_token() {
     return t;
 }
 
-void free_token(token *t) {
+void free_token(Token *t) {
     free(t->value);
     t->value = NULL;
     return;
 }
 
 /* dynamic array utils */
-static void grow_array(token_dynamic_array *array, unsigned int new_size) {
-    array->tokens = realloc(array->tokens, sizeof(token) * new_size);
+static void grow_array(TokenArray *array, unsigned int new_size) {
+    array->tokens = realloc(array->tokens, (sizeof *array->tokens) * new_size);
     if (array->tokens == NULL) {
         fputs("error: unable to realloc array\n", stderr);
     }
@@ -102,16 +102,16 @@ static void grow_array(token_dynamic_array *array, unsigned int new_size) {
 
 
 /* public dynarray functions */
-token_dynamic_array *create_token_dyn_array() {
-    token_dynamic_array *array = malloc(sizeof(token_dynamic_array));
-    array->tokens = malloc(sizeof(token) * 8);
-    array->capacity = 8;
+TokenArray *create_token_dyn_array() {
+    TokenArray *array = malloc(sizeof *array);
+    array->capacity = DYNARRAY_INITIAL_SIZE;
     array->count = 0;
+    array->tokens = malloc((sizeof *array->tokens) * array->capacity);
     return array;
 }
 
 
-void append_to_array(token_dynamic_array *array, token *t) {
+void append_to_array(TokenArray *array, Token *t) {
     if (array->count == array->capacity) {
         array->capacity *= DYNARRAY_GROW_BY_FACTOR;
         grow_array(array, array->capacity);
@@ -126,7 +126,7 @@ void append_to_array(token_dynamic_array *array, token *t) {
     array->count++;
 }
 
-void free_array(token_dynamic_array *array) {
+void free_array(TokenArray *array) {
     for (int i = 0; i < array->count; i++) {
         free(array->tokens[i].value);
         array->tokens[i].value = NULL;
@@ -139,13 +139,13 @@ void free_array(token_dynamic_array *array) {
     array = NULL;
 }
 
-void print_tokens(token_dynamic_array *array) {
+void print_tokens(TokenArray *array) {
     for (unsigned int i = 0; i < array->count; i++) {
         print_token(&(array->tokens[i]));
     }
 }
 
-token *next_token(token_dynamic_array *array, dynarray_iterator *iter) {
+Token *next_token(TokenArray *array, dynarray_iterator *iter) {
     if (iter->index >= array->count) {
         return NULL;
     }
@@ -164,7 +164,7 @@ token *next_token(token_dynamic_array *array, dynarray_iterator *iter) {
     return &(array->tokens[iter->index]);
 }
 
-token *peek_next_token(token_dynamic_array *array, dynarray_iterator *iter) {
+Token *peek_next_token(TokenArray *array, dynarray_iterator *iter) {
     if (iter->index + 1 >= array->count) {
         return NULL;
     }
@@ -177,7 +177,7 @@ token *peek_next_token(token_dynamic_array *array, dynarray_iterator *iter) {
     return &(array->tokens[iter->index + 1]);
 }
 
-token *current_token(token_dynamic_array *array, dynarray_iterator *iter) {
+Token *current_token(TokenArray *array, dynarray_iterator *iter) {
     if (iter->index >= array->count) {
         return NULL;
     }
@@ -196,8 +196,8 @@ token *current_token(token_dynamic_array *array, dynarray_iterator *iter) {
 
 
 // #define foreach(var, array, iter) while ((var = next_token(array, iter)) != NULL)
-void print_tokens2(token_dynamic_array *array) {
-    token *t;
+void print_tokens2(TokenArray *array) {
+    Token *t;
     // dynarray_iterator iter = { array->count, 0 };
 
     foreach(t, array) {

@@ -21,7 +21,7 @@ unsigned long get_file_size(FILE *fp) {
 }
 
 int run(virtual_machine *vm, char *source) {
-    token_dynamic_array *tokens = tokenize(source);
+    TokenArray *tokens = tokenize(source);
 
     #ifdef DEBUG_TOKENS
     print_tokens(tokens);

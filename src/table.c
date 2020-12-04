@@ -27,7 +27,6 @@ static void resize_table(HashTable *table, unsigned int new_size) {
     table->entries = calloc(new_size, sizeof *table->entries);
 
     unsigned int old_capacity = table->capacity;
-    unsigned int old_elements = table->elements;
     table->capacity = new_size;
     table->elements = 0;
 

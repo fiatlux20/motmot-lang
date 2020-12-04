@@ -6,7 +6,7 @@ SDIR := src
 ODIR := build
 OUT_FILE := interp
 CC := gcc
-CWARNS := -Wall -Wshadow -pedantic -Wpointer-arith -Wcast-align # -Waggregate-return
+CWARNS := -Wall -Wshadow -Wpointer-arith -Wcast-align -Wstrict-aliasing=1 # -Waggregate-return
 DEFINES := -DMAJOR_VERS=$(MAJOR_VERS) -DMINOR_VERS=$(MINOR_VERS)
 CFLAGS := -I./$(IDIR) $(CWARNS) $(DEFINES) -Og -g -fsanitize=address
 

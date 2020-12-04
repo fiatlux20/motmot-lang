@@ -67,7 +67,7 @@ static unsigned int match_keyword(char *word) {
     }
 }
 
-static token match_identifier(char *source, char *buf, unsigned int source_size, unsigned int *pos) {
+static Token match_identifier(char *source, char *buf, unsigned int source_size, unsigned int *pos) {
     unsigned int buf_pos = 0;
     char current;
 
@@ -83,7 +83,7 @@ static token match_identifier(char *source, char *buf, unsigned int source_size,
 
     buf[buf_pos] = '\0';
 
-    token new_token = create_token();
+    Token new_token = create_token();
     unsigned int keyword = match_keyword(buf);
 
     if (keyword == T_TRUE || keyword == T_FALSE) {
@@ -109,7 +109,7 @@ static token match_identifier(char *source, char *buf, unsigned int source_size,
     return new_token;
 }
 
-static token match_number(char *source, char *buf, unsigned int source_size, unsigned int *pos) {
+static Token match_number(char *source, char *buf, unsigned int source_size, unsigned int *pos) {
     unsigned int buf_pos = 0;
     char current;
 
@@ -125,7 +125,7 @@ static token match_number(char *source, char *buf, unsigned int source_size, uns
 
     buf[buf_pos] = '\0';
 
-    token new_token = create_token();
+    Token new_token = create_token();
     new_token.value = malloc(sizeof(char) * (buf_pos + 1));
     memcpy(new_token.value, buf, buf_pos + 1);
 
@@ -134,7 +134,7 @@ static token match_number(char *source, char *buf, unsigned int source_size, uns
     return new_token;
 }
 
-static token match_string(char *source, char *buf, unsigned int source_size, unsigned int *pos) {
+static Token match_string(char *source, char *buf, unsigned int source_size, unsigned int *pos) {
     unsigned int buf_pos = 0;
     char current = source[*pos];
     char quote_char = current;
@@ -151,7 +151,7 @@ static token match_string(char *source, char *buf, unsigned int source_size, uns
         }
     } while (current != quote_char);
 
-    token new_token = create_token();
+    Token new_token = create_token();
 
     /* excluding the two quote chars */
     buf[buf_pos - 1] = '\0';
@@ -238,14 +238,14 @@ static unsigned int match_symbol(char *source, unsigned int source_size, unsigne
 
 
 /* public functions */
-token_dynamic_array *tokenize(char *source) {
+TokenArray *tokenize(char *source) {
     unsigned int source_size = strlen(source);
     unsigned int pos = 0;
     char current;
 
     char char_buf[CHAR_BUF_SZ];
 
-    token_dynamic_array *token_list = create_token_dyn_array();
+    TokenArray *token_list = create_token_dyn_array();
 
     while (pos < source_size) {
         current = source[pos];
@@ -254,22 +254,22 @@ token_dynamic_array *tokenize(char *source) {
         }
 
         if (is_alpha(current)) {
-            token new_token = match_identifier(source, char_buf, source_size, &pos);
+            Token new_token = match_identifier(source, char_buf, source_size, &pos);
             append_to_array(token_list, &new_token);
         }
 
         else if (is_num(current)) {
-            token new_token = match_number(source, char_buf, source_size, &pos);
+            Token new_token = match_number(source, char_buf, source_size, &pos);
             append_to_array(token_list, &new_token);
         }
 
         else if (is_quote(current)) {
-            token new_token = match_string(source, char_buf, source_size, &pos);
+            Token new_token = match_string(source, char_buf, source_size, &pos);
             append_to_array(token_list, &new_token);
         }
 
         else if (is_symbol(current)) {
-            token new_token = create_token();
+            Token new_token = create_token();
             new_token.type = match_symbol(source, source_size, &pos);
             append_to_array(token_list, &new_token);
             pos++;

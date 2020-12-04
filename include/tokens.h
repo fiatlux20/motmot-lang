@@ -3,8 +3,16 @@
 
 #include "common.h"
 
-enum token_type {
+typedef struct rule Rule;
+typedef struct token Token;
+typedef struct token_dynamic_array TokenArray;
+
+typedef void (*ParsingFunction)();
+
+typedef enum {
     T_NONE,
+    T_EOF,
+    T_ERROR,
     T_NIL,
 
     T_IDENTIFIER,
@@ -60,34 +68,46 @@ enum token_type {
     T_MINUS_EQL,
     T_ASTERISK_EQL,
     T_SLASH_EQL
+} TokenType;
+
+typedef enum {
+    PREC_NONE,
+    PREC_TERM,
+    PREC_FACTOR
+} Precedence;
+
+struct rule {
+    ParsingFunction prefix;
+    ParsingFunction infix;
+    Precedence precedence;
 };
 
-typedef struct {
+struct token {
     char *value;
-    enum token_type type;
+    TokenType type;
     unsigned int line;
-} token;
+};
 
-typedef struct {
-    token *tokens;
+struct token_dynamic_array {
+    Token *tokens;
     unsigned int capacity;
     unsigned int count;
-} token_dynamic_array;
+};
 
 /* token ops */
-void print_token(token *t);
-token create_token();
-void free_token(token *t);
+void print_token(Token *t);
+Token create_token();
+void free_token(Token *t);
 
 /* array ops */
-token_dynamic_array *create_token_dyn_array();
-void append_to_array(token_dynamic_array *array, token *t);
-void free_array(token_dynamic_array *array);
-void print_tokens(token_dynamic_array *array);
-void print_tokens2(token_dynamic_array *array);
+TokenArray *create_token_dyn_array();
+void append_to_array(TokenArray *array, Token *t);
+void free_array(TokenArray *array);
+void print_tokens(TokenArray *array);
+void print_tokens2(TokenArray *array);
 
-token *next_token(token_dynamic_array *array, dynarray_iterator *iter);
-token *peek_next_token(token_dynamic_array *array, dynarray_iterator *iter);
-token *current_token(token_dynamic_array *array, dynarray_iterator *iter);
+Token *next_token(TokenArray *array, dynarray_iterator *iter);
+Token *peek_next_token(TokenArray *array, dynarray_iterator *iter);
+Token *current_token(TokenArray *array, dynarray_iterator *iter);
 
 #endif /* _TOKENS_H_ */
