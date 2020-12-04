@@ -44,6 +44,7 @@
 #define END_TEST_CASE() \
     if (test_code == 0) printf("    %d:PASSED %s\n", line, test_desc); \
     else printf("    %d:FAILED %s\n", line, test_desc); \
+    test_code = 0; \
     } while (0)
 
 #define INIT_TEST() \
