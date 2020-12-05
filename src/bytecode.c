@@ -4,7 +4,7 @@
 
 #include "bytecode.h"
 
-static void grow_bytecode_array(bytecode_array *array, unsigned int new_size) {
+static void grow_bytecode_array(BytecodeArray *array, unsigned int new_size) {
     array->array = realloc(array->array, new_size);
     if (array->array == NULL) {
         fputs("error: unable to realloc array\n", stderr);
@@ -12,7 +12,7 @@ static void grow_bytecode_array(bytecode_array *array, unsigned int new_size) {
 }
 
 /* value array */
-static void grow_value_array(value_array *array, unsigned int new_size) {
+static void grow_value_array(ValueArray *array, unsigned int new_size) {
     if (new_size > MAX_CHUNK_CONSTANTS) {
         fputs("error: constants overflow\n", stderr);
         return;
@@ -24,15 +24,15 @@ static void grow_value_array(value_array *array, unsigned int new_size) {
     }
 }
 
-value_array create_value_dynarray() {
-    value_array array;
+ValueArray create_value_dynarray() {
+    ValueArray array;
     array.elements = 0;
     array.capacity = DYNARRAY_INITIAL_SIZE;
     array.array = malloc(DYNARRAY_INITIAL_SIZE * (sizeof *array.array));
     return array;
 }
 
-void append_to_value_dynarray(value_array *array, Value val) {
+void append_to_value_dynarray(ValueArray *array, Value val) {
     if (array->elements == array->capacity) {
         array->capacity *= DYNARRAY_GROW_BY_FACTOR;
         grow_value_array(array, array->capacity);
@@ -46,13 +46,13 @@ void append_to_value_dynarray(value_array *array, Value val) {
     array->array[array->elements++] = val;
 }
 
-void free_value_dynarray(value_array *array) {
+void free_value_dynarray(ValueArray *array) {
     free(array->array);
     array->array = NULL;
 }
 
 /* names array */
-static void grow_name_array(name_array *array, unsigned int new_size) {
+static void grow_name_array(NameArray *array, unsigned int new_size) {
     if (new_size > MAX_CHUNK_NAMES) {
         fputs("error: names overflow\n", stderr);
         return;
@@ -71,15 +71,15 @@ static void grow_name_array(name_array *array, unsigned int new_size) {
     free(old_array);
 }
 
-name_array create_name_dynarray() {
-    name_array array;
+NameArray create_name_dynarray() {
+    NameArray array;
     array.elements = 0;
     array.capacity = DYNARRAY_INITIAL_SIZE;
     array.array = calloc(DYNARRAY_INITIAL_SIZE, (sizeof *array.array));
     return array;
 }
 
-void append_to_name_dynarray(name_array *array, char *val) {
+void append_to_name_dynarray(NameArray *array, char *val) {
     if (array->elements == array->capacity) {
         array->capacity *= DYNARRAY_GROW_BY_FACTOR;
         grow_name_array(array, array->capacity);
@@ -97,7 +97,7 @@ void append_to_name_dynarray(name_array *array, char *val) {
     array->elements++;
 }
 
-void free_name_dynarray(name_array *array) {
+void free_name_dynarray(NameArray *array) {
     for (unsigned int i = 0; i < array->elements; i++) {
         free(array->array[i]);
         array->array[i] = NULL;
@@ -108,8 +108,8 @@ void free_name_dynarray(name_array *array) {
 }
 
 /* bytecode chunk */
-bytecode_array create_bytecode_dynarray() {
-    bytecode_array array;
+BytecodeArray create_bytecode_dynarray() {
+    BytecodeArray array;
     array.elements = 0;
     array.capacity = DYNARRAY_INITIAL_SIZE;
     array.array = malloc(sizeof(uint8_t) * DYNARRAY_INITIAL_SIZE);
@@ -118,7 +118,7 @@ bytecode_array create_bytecode_dynarray() {
     return array;
 }
 
-void append_to_bytecode_dynarray(bytecode_array *array, opcode_t op) {
+void append_to_bytecode_dynarray(BytecodeArray *array, opcode_t op) {
     if (array == NULL) {
         printf("WTF\n");
     }
@@ -135,7 +135,7 @@ void append_to_bytecode_dynarray(bytecode_array *array, opcode_t op) {
     array->array[array->elements++] = op;
 }
 
-opcode_t *next_opcode(bytecode_array *array, dynarray_iterator *iter) {
+opcode_t *next_opcode(BytecodeArray *array, dynarray_iterator *iter) {
     if (iter->index + 1 >= array->elements) {
         return NULL;
     }
@@ -147,7 +147,7 @@ opcode_t *next_opcode(bytecode_array *array, dynarray_iterator *iter) {
     return &(array->array[iter->index]);
 }
 
-void free_bytecode_dynarray(bytecode_array *array) {
+void free_bytecode_dynarray(BytecodeArray *array) {
     free_value_dynarray(&array->constants);
     // free_name_dynarray(&array->names); // handled by vm
     free(array->array);
@@ -169,7 +169,7 @@ static void print_opcode(opcode_t opcode) {
     }
 }
 
-// void print_disassembly(bytecode_array *bytecode) {
+// void print_disassembly(BytecodeArray *bytecode) {
 //     opcode_t *opcode;
 //     dynarray_iterator iter = { bytecode->elements, 0 };
 
@@ -184,7 +184,7 @@ static void print_opcode(opcode_t opcode) {
 //     }
 // }
 
-void print_disassembly(bytecode_array *bytecode) {
+void print_disassembly(BytecodeArray *bytecode) {
     unsigned int length = bytecode->elements;
     Value *v;
 
@@ -218,7 +218,7 @@ void print_disassembly(bytecode_array *bytecode) {
     }
 }
 
-void print_constants(bytecode_array *bytecode) {
+void print_constants(BytecodeArray *bytecode) {
     fputs("---- constants ----\n", stdout);
 
     for (unsigned int i = 0; i < bytecode->constants.capacity; i++) {
@@ -228,7 +228,7 @@ void print_constants(bytecode_array *bytecode) {
     }
 }
 
-void print_names(bytecode_array *bytecode) {
+void print_names(BytecodeArray *bytecode) {
     fputs("---- names ----\n", stdout);
 
     printf("# elements = %d\n", bytecode->names->elements);

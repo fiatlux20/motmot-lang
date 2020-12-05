@@ -17,23 +17,23 @@ typedef struct {
     unsigned int head;
     unsigned int size;
     Value *at;
-} vm_stack;
+} Stack;
 
 typedef struct {
-    vm_stack stack;
-    name_array names;
+    Stack stack;
+    NameArray names;
     HashTable *env;
     int ip;
     int state;
-} virtual_machine;
+} VirtualMachine;
 
-virtual_machine initialize_vm();
-unsigned int execute(virtual_machine *vm, bytecode_array *bytecode);
-void free_vm(virtual_machine *vm);
+VirtualMachine initialize_vm();
+unsigned int execute(VirtualMachine *vm, BytecodeArray *bytecode);
+void free_vm(VirtualMachine *vm);
 
 #ifdef DEBUG_VM
-void print_disassembly(bytecode_array *bytecode);
-void print_stack(virtual_machine *vm);
+void print_disassembly(BytecodeArray *bytecode);
+void print_stack(VirtualMachine *vm);
 #endif
 
 #endif /* _VM_H_ */

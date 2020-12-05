@@ -20,14 +20,14 @@ unsigned long get_file_size(FILE *fp) {
     return file_size;
 }
 
-int run(virtual_machine *vm, char *source) {
+int run(VirtualMachine *vm, char *source) {
     TokenArray *tokens = tokenize(source);
 
     #ifdef DEBUG_TOKENS
     print_tokens(tokens);
     #endif
 
-    bytecode_array bytecode = parse(vm, tokens);
+    BytecodeArray bytecode = parse(vm, tokens);
     free_array(tokens);
 
     #ifdef DEBUG_COMPILER
@@ -48,7 +48,7 @@ int run(virtual_machine *vm, char *source) {
 }
 
 int run_interactive() {
-    virtual_machine vm = initialize_vm();
+    VirtualMachine vm = initialize_vm();
 #ifdef MAJOR_VERS
     printf("Motmot v%d.%d ", MAJOR_VERS, MINOR_VERS);
 #endif
@@ -70,7 +70,7 @@ int run_interactive() {
 }
 
 int run_file(char *filename) {
-    virtual_machine vm;
+    VirtualMachine vm;
     FILE *fp = fopen(filename, "r");
     if (fp == NULL) {
         return -1;

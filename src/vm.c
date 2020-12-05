@@ -4,7 +4,7 @@
 
 #include "vm.h"
 
-static void push(vm_stack *s, Value val) {
+static void push(Stack *s, Value val) {
     s->head &= s->size - 1;
     s->at[s->head++] = val;
 #ifdef DEBUG_STACK
@@ -18,7 +18,7 @@ static void push(vm_stack *s, Value val) {
 #endif
 }
 
-static Value pop(vm_stack *s) {
+static Value pop(Stack *s) {
     s->head &= s->size - 1;
     s->head--;
 
@@ -39,7 +39,7 @@ static Value pop(vm_stack *s) {
 }
 
 /* opcodes */
-static void op_add(vm_stack *s) {
+static void op_add(Stack *s) {
     Value a = pop(s);
     Value b = pop(s);
 
@@ -68,7 +68,7 @@ static void op_add(vm_stack *s) {
     }
 }
 
-static void op_sub(vm_stack *s) {
+static void op_sub(Stack *s) {
     Value a = pop(s);
     Value b = pop(s);
 
@@ -81,7 +81,7 @@ static void op_sub(vm_stack *s) {
     }
 }
 
-static void op_mult(vm_stack *s) {
+static void op_mult(Stack *s) {
     Value a = pop(s);
     Value b = pop(s);
 
@@ -94,7 +94,7 @@ static void op_mult(vm_stack *s) {
     }
 }
 
-static void op_div(vm_stack *s) {
+static void op_div(Stack *s) {
     Value a = pop(s);
     Value b = pop(s);
 
@@ -108,8 +108,8 @@ static void op_div(vm_stack *s) {
 }
 
 
-static vm_stack initialize_stack() {
-    vm_stack stack;
+static Stack initialize_stack() {
+    Stack stack;
     stack.at = malloc((sizeof *stack.at) * STACK_SIZE);
     stack.head = 0;
     stack.size = STACK_SIZE;
@@ -117,13 +117,13 @@ static vm_stack initialize_stack() {
     return stack;
 }
 
-static void free_stack(vm_stack *s) {
+static void free_stack(Stack *s) {
     free(s->at);
     s->at = NULL;
 }
 
-virtual_machine initialize_vm() {
-    virtual_machine vm;
+VirtualMachine initialize_vm() {
+    VirtualMachine vm;
     vm.stack = initialize_stack();
     vm.names = create_name_dynarray();
     vm.env = init_table();
@@ -136,7 +136,7 @@ uint8_t next(uint8_t *ip) {
     return *(++ip);
 }
 
-unsigned int execute(virtual_machine *vm, bytecode_array *bytecode) {
+unsigned int execute(VirtualMachine *vm, BytecodeArray *bytecode) {
     if (vm == NULL || bytecode == NULL || bytecode->array == NULL) {
         return 1;
     }
@@ -212,14 +212,14 @@ end:
     return 0;
 }
 
-void free_vm(virtual_machine *vm) {
+void free_vm(VirtualMachine *vm) {
     free_stack(&vm->stack);
     free_name_dynarray(&vm->names);
     free_table(vm->env);
 }
 
 #ifdef DEBUG_STACK
-void print_stack(virtual_machine *vm) {
+void print_stack(VirtualMachine *vm) {
     unsigned int top = vm->stack.head;
     Value *v = vm->stack.at;
 

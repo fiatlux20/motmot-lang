@@ -63,7 +63,7 @@ static unsigned int accept(Token *t, unsigned int token_type) {
     return t->type == token_type;
 }
 
-static unsigned int expect(parser_state *s, unsigned int token_type) {
+static unsigned int expect(ParserState *s, unsigned int token_type) {
     Token *t = current_token(s->tokens, s->iter);
     if (t == NULL || t->type != token_type) {
         s->error = 1;
@@ -74,7 +74,7 @@ static unsigned int expect(parser_state *s, unsigned int token_type) {
     return 1;
 }
 
-static unsigned int expect_operator(parser_state *s) {
+static unsigned int expect_operator(ParserState *s) {
     Token *t = current_token(s->tokens, s->iter);
     if (t == NULL || !operator(t)) {
         s->error = 1;
@@ -85,7 +85,7 @@ static unsigned int expect_operator(parser_state *s) {
     return 1;
 }
 
-static unsigned int expect_value(parser_state *s) {
+static unsigned int expect_value(ParserState *s) {
     Token *t = current_token(s->tokens, s->iter);
     if (t == NULL || !is_value(t)) {
         s->error = 1;
@@ -97,7 +97,7 @@ static unsigned int expect_value(parser_state *s) {
 }
 
 /* bytecode functions */
-void index_of(name_array *names, char *str, int *ind) {
+void index_of(NameArray *names, char *str, int *ind) {
     for (unsigned int i = 0; i < names->elements; i++) {
         if (strcmp(names->array[i], str) == 0) {
             *ind = i;
@@ -107,17 +107,17 @@ void index_of(name_array *names, char *str, int *ind) {
 
     *ind = -1;
 }
-void emit_opcode(bytecode_array *array, opcode_t opcode) {
+void emit_opcode(BytecodeArray *array, opcode_t opcode) {
     append_to_bytecode_dynarray(array, opcode);
 }
 
-void emit_constant(bytecode_array *array, Value val) {
+void emit_constant(BytecodeArray *array, Value val) {
     append_to_bytecode_dynarray(array, OP_CONSTANT);
     append_to_bytecode_dynarray(array, array->constants.elements); // index of constant
     append_to_value_dynarray(&(array->constants), val);
 }
 
-void emit_set_name(bytecode_array *array, char *str) {
+void emit_set_name(BytecodeArray *array, char *str) {
     int ind = -1;
     index_of(array->names, str, &ind);
     append_to_bytecode_dynarray(array, OP_SET_GLOBAL);
@@ -131,7 +131,7 @@ void emit_set_name(bytecode_array *array, char *str) {
 
 }
 
-void emit_update_name(bytecode_array *array, char *str) {
+void emit_update_name(BytecodeArray *array, char *str) {
     int ind = -1;
     index_of(array->names, str, &ind);
     append_to_bytecode_dynarray(array, OP_UPDATE_GLOBAL);
@@ -145,7 +145,7 @@ void emit_update_name(bytecode_array *array, char *str) {
 
 }
 
-void emit_get_name(bytecode_array *array, char *str) {
+void emit_get_name(BytecodeArray *array, char *str) {
     int ind = -1;
     index_of(array->names, str, &ind);
     append_to_bytecode_dynarray(array, OP_GET_GLOBAL);
@@ -159,15 +159,15 @@ void emit_get_name(bytecode_array *array, char *str) {
 }
 
 /* matching groups */
-static void binary(parser_state *s);
-static void unary(parser_state *s);
-static void grouping(parser_state *s);
-static void block(parser_state *s);
-static void expression(parser_state *s);
-static void statement(parser_state *s);
-static void if_statement(parser_state *s);
+static void binary(ParserState *s);
+static void unary(ParserState *s);
+static void grouping(ParserState *s);
+static void block(ParserState *s);
+static void expression(ParserState *s);
+static void statement(ParserState *s);
+static void if_statement(ParserState *s);
 
-static void binary(parser_state *s) {
+static void binary(ParserState *s) {
     #ifdef DEBUG_PARSER
     printf("in binary\n");
     #endif
@@ -191,7 +191,7 @@ static void binary(parser_state *s) {
     #endif
 }
 
-static void unary(parser_state *s) {
+static void unary(ParserState *s) {
     #ifdef DEBUG_PARSER
     printf("in unary\n");
     #endif
@@ -204,7 +204,7 @@ static void unary(parser_state *s) {
     #endif
 }
 
-static void grouping(parser_state *s) {
+static void grouping(ParserState *s) {
     #ifdef DEBUG_PARSER
     printf("in grouping\n");
     #endif
@@ -223,13 +223,13 @@ static void grouping(parser_state *s) {
     }
 }
 
-static void block(parser_state *s) {
+static void block(ParserState *s) {
     expect(s, T_LCURLY);
     statement(s);
     expect(s, T_RCURLY);
 }
 
-static void expression(parser_state *s) {
+static void expression(ParserState *s) {
     #ifdef DEBUG_PARSER
     printf("in expression\n");
     #endif
@@ -289,7 +289,7 @@ static void expression(parser_state *s) {
     }
 }
 
-static void assignment(parser_state *s) {
+static void assignment(ParserState *s) {
     expect(s, T_VAR);
     Token *name = current_token(s->tokens, s->iter);
     expect(s, T_IDENTIFIER);
@@ -299,7 +299,7 @@ static void assignment(parser_state *s) {
     emit_set_name(s->bytecode, name->value);
 }
 
-static void statement(parser_state *s) {
+static void statement(ParserState *s) {
     Token *t = current_token(s->tokens, s->iter);
     Token *temp;
 
@@ -347,7 +347,7 @@ static void statement(parser_state *s) {
     }
 }
 
-static void if_statement(parser_state *s) {
+static void if_statement(ParserState *s) {
     expect(s, T_IF);
 
     expect(s, T_LPAREN);
@@ -358,12 +358,12 @@ static void if_statement(parser_state *s) {
 }
 
 /* public functions */
-bytecode_array parse(virtual_machine *vm, TokenArray *tokens) {
+BytecodeArray parse(VirtualMachine *vm, TokenArray *tokens) {
     dynarray_iterator iter = { tokens->count, 0 };
-    bytecode_array bytecode = create_bytecode_dynarray();
+    BytecodeArray bytecode = create_bytecode_dynarray();
     bytecode.names = &vm->names;
 
-    parser_state s;
+    ParserState s;
     s.tokens = tokens;
     s.bytecode = &bytecode;
     s.iter = &iter;

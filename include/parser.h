@@ -51,10 +51,10 @@ typedef struct parse_tree_node {
 typedef struct {
     TokenArray *tokens;
     dynarray_iterator *iter;
-    bytecode_array *bytecode;
+    BytecodeArray *bytecode;
     unsigned int error;
-} parser_state;
+} ParserState;
 
-bytecode_array parse(virtual_machine *vm, TokenArray *tokens);
+BytecodeArray parse(VirtualMachine *vm, TokenArray *tokens);
 
 #endif /* GRAMMAR_H_ */

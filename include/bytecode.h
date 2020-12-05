@@ -25,42 +25,42 @@ typedef struct {
     Value *array;
     uint32_t elements;
     uint32_t capacity;
-} value_array;
+} ValueArray;
 
 typedef struct {
     char **array;
     uint32_t elements;
     uint32_t capacity;
-} name_array;
+} NameArray;
 
 typedef struct {
     uint8_t *array;
-    value_array constants;
-    name_array *names;
+    ValueArray constants;
+    NameArray *names;
     uint32_t elements;
     uint32_t capacity;
-} bytecode_array;
+} BytecodeArray;
 
 
 /* array ops */
-bytecode_array create_bytecode_dynarray();
-void init_bytecode_dynarray(bytecode_array *array);
-void append_to_bytecode_dynarray(bytecode_array *array, opcode_t op);
-opcode_t *next_opcode(bytecode_array *array, dynarray_iterator *iter);
-void free_bytecode_dynarray(bytecode_array *array);
+BytecodeArray create_bytecode_dynarray();
+void init_bytecode_dynarray(BytecodeArray *array);
+void append_to_bytecode_dynarray(BytecodeArray *array, opcode_t op);
+opcode_t *next_opcode(BytecodeArray *array, dynarray_iterator *iter);
+void free_bytecode_dynarray(BytecodeArray *array);
 
-value_array create_value_dynarray();
-void append_to_value_dynarray(value_array *array, Value val);
-void free_value_dynarray(value_array *array);
+ValueArray create_value_dynarray();
+void append_to_value_dynarray(ValueArray *array, Value val);
+void free_value_dynarray(ValueArray *array);
 
-name_array create_name_dynarray();
-void append_to_name_dynarray(name_array *array, char *val);
-void free_name_dynarray(name_array *array);
+NameArray create_name_dynarray();
+void append_to_name_dynarray(NameArray *array, char *val);
+void free_name_dynarray(NameArray *array);
 
 #ifdef DEBUG_VM
-void print_disassembly(bytecode_array *bytecode);
-void print_constants(bytecode_array *bytecode);
-void print_names(bytecode_array *bytecode);
+void print_disassembly(BytecodeArray *bytecode);
+void print_constants(BytecodeArray *bytecode);
+void print_names(BytecodeArray *bytecode);
 #endif /* DEBUG_VM */
 
 #endif /* _BYTECODE_H_ */
