@@ -24,8 +24,8 @@ $(OUT_FILE): $(OBJ)
 $(ODIR):
 	mkdir $(ODIR)
 
-$(TEST_FILE): tests/test.c
-	$(CC) tests/test.c $(SDIR)/table.c $(SDIR)/value.c $(CFLAGS) -o $@
+$(TEST_FILE): tests/test.c $(filter-out $(ODIR)/main.o, $(OBJ))
+	$(CC) $^ $(CFLAGS) -o $@
 
 .PHONY: clean
 clean:
