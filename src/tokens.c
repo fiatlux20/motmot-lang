@@ -24,6 +24,7 @@ void print_token(Token *token) {
 
         switch(token->type) {
         case T_NIL: symbol = "NIL"; break;
+        case T_EOF: symbol = "EOF"; break;
         case T_AND: symbol = "AND"; break;
         case T_OR: symbol = "OR"; break;
         case T_FUN: symbol = "FUN"; break;

@@ -276,5 +276,8 @@ TokenArray *tokenize(char *source) {
         }
     }
 
+    Token eof_token = create_token();
+    eof_token.type = T_EOF;
+    append_to_array(token_list, &eof_token);
     return token_list;
 }
