@@ -4,22 +4,46 @@
 
 #include "parser.h"
 
-static void advance(ParserState*);
-static void parse_precedence(ParserState*, Precedence);
-static void expression(ParserState*);
+/* private functions */
+static void assignment(ParserState*);
 static void binary(ParserState*);
+static void expression(ParserState*);
 static void grouping(ParserState*);
-static void unary(ParserState*);
-static void number(ParserState*);
 static void identifier(ParserState*);
+static void number(ParserState*);
+static void string(ParserState*);
+static void unary(ParserState*);
 
+BytecodeArray *parse(VirtualMachine *vm, TokenArray *tokens) {
+    dynarray_iterator iter = { tokens->count, 0 };
+    BytecodeArray *bytecode = create_bytecode_dynarray();
+    bytecode->names = &vm->names;
+
+    ParserState s;
+    s.current = tokens->tokens;
+    s.prev = NULL;
+    s.bytecode = bytecode;
+    s.iter = &iter;
+    s.error = 0;
+
+    expression(&s);
+    // statement(&s);
+
+    #ifdef DEBUG_PARSER
+    printf("index at %ld out of %d\n", s.current - tokens->tokens, tokens->count);
+    #endif
+
+    return bytecode;
+}
+
+/* private functions */
 const static Rule rules[] = {
     [T_NONE]         = { NULL,       NULL,   PREC_NONE },
     [T_EOF]          = { NULL,       NULL,   PREC_NONE },
     [T_ERROR]        = { NULL,       NULL,   PREC_NONE },
     [T_NIL]          = { NULL,       NULL,   PREC_NONE },
     [T_IDENTIFIER]   = { identifier, NULL,   PREC_NONE },
-    [T_STRING]       = { NULL,       NULL,   PREC_NONE },
+    [T_STRING]       = { string,     NULL,   PREC_NONE },
     [T_NUMBER]       = { number,     NULL,   PREC_NONE },
     [T_BOOLEAN]      = { NULL,       NULL,   PREC_NONE },
     [T_AND]          = { NULL,       NULL,   PREC_NONE },
@@ -29,7 +53,7 @@ const static Rule rules[] = {
     [T_ELSE]         = { NULL,       NULL,   PREC_NONE },
     [T_FOR]          = { NULL,       NULL,   PREC_NONE },
     [T_WHILE]        = { NULL,       NULL,   PREC_NONE },
-    [T_VAR]          = { NULL,       NULL,   PREC_NONE },
+    [T_VAR]          = { assignment, NULL,   PREC_NONE },
     [T_TRUE]         = { NULL,       NULL,   PREC_NONE },
     [T_FALSE]        = { NULL,       NULL,   PREC_NONE },
     [T_LPAREN]       = { grouping,   NULL,   PREC_NONE },
@@ -67,32 +91,7 @@ const static Rule rules[] = {
     [T_SLASH_EQL]    = { NULL,       NULL,   PREC_NONE },
 };
 
-
-/* public functions */
-BytecodeArray *parse(VirtualMachine *vm, TokenArray *tokens) {
-    dynarray_iterator iter = { tokens->count, 0 };
-    BytecodeArray *bytecode = create_bytecode_dynarray();
-    bytecode->names = &vm->names;
-
-    ParserState s;
-    s.current = tokens->tokens;
-    s.prev = NULL;
-    s.bytecode = bytecode;
-    s.iter = &iter;
-    s.error = 0;
-
-    expression(&s);
-    // statement(&s);
-
-    #ifdef DEBUG_PARSER
-    printf("index at %ld out of %d\n", s.current - tokens->tokens, tokens->count);
-    #endif
-
-    return bytecode;
-}
-
-
-/* private functions */
+/* helper functions */
 static const Rule *const get_rule(Token *token) {
     return &rules[token->type];
 }
@@ -100,6 +99,18 @@ static const Rule *const get_rule(Token *token) {
 static void advance(ParserState *parser) {
     parser->prev = parser->current;
     parser->current++;
+}
+
+static int expect(ParserState *parser, TokenType type) {
+    if (parser->current == NULL || parser->current->type != type) {
+        parser->error = 1;
+        return 0;
+    }
+    return 1;
+}
+
+static int at_end(ParserState *parser) {
+    return parser->current->type == T_EOF;
 }
 
 void emit_opcode(BytecodeArray *array, opcode_t op) {
@@ -112,6 +123,7 @@ void emit_constant(BytecodeArray *array, Value val) {
     append_to_value_dynarray(array->constants, val);
 }
 
+/* parsing functions */
 static void parse_precedence(ParserState *parser, Precedence prec) {
     #ifdef DEBUG_PARSER
     printf("in parse_precedence\n");
@@ -126,7 +138,7 @@ static void parse_precedence(ParserState *parser, Precedence prec) {
 
     prefix(parser);
 
-    while (prec <= get_rule(parser->current)->precedence) {
+    while (!at_end(parser) && prec <= get_rule(parser->current)->precedence) {
         ParsingFunction infix = get_rule(parser->current)->infix;
         infix(parser);
     }
@@ -138,10 +150,6 @@ static void expression(ParserState *parser) {
 
 static void identifier(ParserState *parser) {
 
-}
-
-static void grouping(ParserState *parser) {
-    
 }
 
 static void binary(ParserState *parser) {
@@ -197,4 +205,47 @@ static void number(ParserState *s) {
     #ifdef DEBUG_PARSER
     printf("out of number\n");
     #endif
+}
+
+static void string(ParserState *s) {
+    #ifdef DEBUG_PARSER
+    printf("in number\n");
+    #endif
+
+    emit_constant(s->bytecode, string_value(s->current->value));
+    advance(s);
+
+    #ifdef DEBUG_PARSER
+    printf("out of number\n");
+    #endif
+}
+
+static void grouping(ParserState *s) {
+    advance(s);
+    expression(s);
+
+    if (!expect(s, T_RPAREN)) {
+        report_error("SyntaxError", "Expected closing parenthesis ')'");
+        return;
+    } else {
+        advance(s);
+    }
+}
+
+/* var x = expr */
+static void assignment(ParserState *s) {
+    advance(s);
+    /* expect identifier, push name */
+    if (!expect(s, T_IDENTIFIER)) {
+        report_error("SyntaxError", "Expected identifier in assignment statement");
+        return;
+    }
+
+    advance(s);
+    if (!expect(s, T_IDENTIFIER)) {
+        report_error("SyntaxError", "Expected '=' after variable in assignment statement");
+        return;
+    }
+
+    expression(s);
 }
