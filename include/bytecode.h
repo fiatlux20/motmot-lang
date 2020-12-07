@@ -35,21 +35,21 @@ typedef struct {
 
 typedef struct {
     uint8_t *array;
-    ValueArray constants;
     NameArray *names;
+    ValueArray *constants;
     uint32_t elements;
     uint32_t capacity;
 } BytecodeArray;
 
 
 /* array ops */
-BytecodeArray create_bytecode_dynarray();
+BytecodeArray *create_bytecode_dynarray();
 void init_bytecode_dynarray(BytecodeArray *array);
 void append_to_bytecode_dynarray(BytecodeArray *array, opcode_t op);
 opcode_t *next_opcode(BytecodeArray *array, dynarray_iterator *iter);
 void free_bytecode_dynarray(BytecodeArray *array);
 
-ValueArray create_value_dynarray();
+ValueArray *create_value_dynarray();
 void append_to_value_dynarray(ValueArray *array, Value val);
 void free_value_dynarray(ValueArray *array);
 

@@ -27,22 +27,22 @@ int run(VirtualMachine *vm, char *source) {
     print_tokens(tokens);
     #endif
 
-    BytecodeArray bytecode = parse(vm, tokens);
+    BytecodeArray *bytecode = parse(vm, tokens);
     free_array(tokens);
 
     #ifdef DEBUG_COMPILER
-    print_disassembly(&bytecode);
-    print_constants(&bytecode);
-    print_names(&bytecode);
+    print_disassembly(bytecode);
+    print_constants(bytecode);
+    print_names(bytecode);
     #endif
 
-    execute(vm, &bytecode);
+    execute(vm, bytecode);
 
     #ifdef DEBUG_STACK
     print_stack(vm);
     #endif
 
-    free_bytecode_dynarray(&bytecode);
+    free_bytecode_dynarray(bytecode);
 
     return 0;
 }

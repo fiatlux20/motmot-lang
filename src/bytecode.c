@@ -24,11 +24,11 @@ static void grow_value_array(ValueArray *array, unsigned int new_size) {
     }
 }
 
-ValueArray create_value_dynarray() {
-    ValueArray array;
-    array.elements = 0;
-    array.capacity = DYNARRAY_INITIAL_SIZE;
-    array.array = malloc(DYNARRAY_INITIAL_SIZE * (sizeof *array.array));
+ValueArray *create_value_dynarray() {
+    ValueArray *array = malloc(sizeof *array);
+    array->elements = 0;
+    array->capacity = DYNARRAY_INITIAL_SIZE;
+    array->array = malloc(DYNARRAY_INITIAL_SIZE * (sizeof *array->array));
     return array;
 }
 
@@ -49,6 +49,8 @@ void append_to_value_dynarray(ValueArray *array, Value val) {
 void free_value_dynarray(ValueArray *array) {
     free(array->array);
     array->array = NULL;
+    free(array);
+    array = NULL;
 }
 
 /* names array */
@@ -108,20 +110,18 @@ void free_name_dynarray(NameArray *array) {
 }
 
 /* bytecode chunk */
-BytecodeArray create_bytecode_dynarray() {
-    BytecodeArray array;
-    array.elements = 0;
-    array.capacity = DYNARRAY_INITIAL_SIZE;
-    array.array = malloc(sizeof(uint8_t) * DYNARRAY_INITIAL_SIZE);
-    array.constants = create_value_dynarray();
+BytecodeArray *create_bytecode_dynarray() {
+    BytecodeArray *array = malloc(sizeof *array);
+    array->elements = 0;
+    array->capacity = DYNARRAY_INITIAL_SIZE;
+    array->array = malloc(sizeof(uint8_t) * DYNARRAY_INITIAL_SIZE);
+    array->constants = create_value_dynarray();
+    array->names = NULL;
     // array.names = create_name_dynarray(); // handled by vm
     return array;
 }
 
 void append_to_bytecode_dynarray(BytecodeArray *array, opcode_t op) {
-    if (array == NULL) {
-        printf("WTF\n");
-    }
     if (array->elements == array->capacity) {
         array->capacity *= DYNARRAY_GROW_BY_FACTOR;
         grow_bytecode_array(array, array->capacity);
@@ -148,10 +148,13 @@ opcode_t *next_opcode(BytecodeArray *array, dynarray_iterator *iter) {
 }
 
 void free_bytecode_dynarray(BytecodeArray *array) {
-    free_value_dynarray(&array->constants);
+    free_value_dynarray(array->constants);
     // free_name_dynarray(&array->names); // handled by vm
     free(array->array);
     array->array = NULL;
+
+    free(array);
+    array = NULL;
 }
 
 #ifdef DEBUG_COMPILER
@@ -194,7 +197,7 @@ void print_disassembly(BytecodeArray *bytecode) {
         printf("%04d  ", i);
         switch (op) {
         case OP_CONSTANT:
-            v = &bytecode->constants.array[bytecode->array[i + 1]];
+            v = &bytecode->constants->array[bytecode->array[i + 1]];
             printf("%02x CONSTANT (", op);
             print_value(v);
             printf(")\n");
@@ -221,9 +224,9 @@ void print_disassembly(BytecodeArray *bytecode) {
 void print_constants(BytecodeArray *bytecode) {
     fputs("---- constants ----\n", stdout);
 
-    for (unsigned int i = 0; i < bytecode->constants.capacity; i++) {
+    for (unsigned int i = 0; i < bytecode->constants->capacity; i++) {
         printf("%d: ", i);
-        print_value(&bytecode->constants.array[i]);
+        print_value(&bytecode->constants->array[i]);
         printf("\n");
     }
 }

@@ -7,54 +7,31 @@
 #include "tokens.h"
 #include "vm.h"
 
-/*
-  expression     → equality ;
-  equality       → comparison ( ( "!=" | "==" ) comparison )* ;
-  comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
-  term           → factor ( ( "-" | "+" ) factor )* ;
-  factor         → unary ( ( "/" | "*" ) unary )* ;
-  unary          → ( "!" | "-" ) unary
-                 | primary ;
-  primary        → NUMBER | STRING | "true" | "false" | "nil"
-                 | "(" expression ")" ;
- */
+typedef struct rule Rule;
+typedef struct parser_state ParserState;
+typedef void (*ParsingFunction)(ParserState* s);
 
-/*
-typedef union {
-    long integer;
-    double number;
-    char *string;
-    char boolean;
-} literal;
-
-typedef union {
-    expression *expr;
-    literal value;
-} expr;
-
-typedef struct {
-
-} parse_tree;
-
-typedef struct expression {
-    struct expression *left;
-    unsigned int op;
-    struct expression *right;
-} expression;
-
-typedef struct parse_tree_node {
-    struct parse_tree_node **next;
-    expression;
-} parse_tree_node;
-*/
-
-typedef struct {
-    TokenArray *tokens;
+struct parser_state {
+    Token *current;
+    Token *prev;
     dynarray_iterator *iter;
     BytecodeArray *bytecode;
     unsigned int error;
-} ParserState;
+};
 
-BytecodeArray parse(VirtualMachine *vm, TokenArray *tokens);
+typedef enum {
+    PREC_NONE,
+    PREC_ASSIGNMENT,
+    PREC_TERM,
+    PREC_FACTOR
+} Precedence;
+
+struct rule {
+    ParsingFunction prefix;
+    ParsingFunction infix;
+    Precedence precedence;
+};
+
+BytecodeArray *parse(VirtualMachine *vm, TokenArray *tokens);
 
 #endif /* GRAMMAR_H_ */

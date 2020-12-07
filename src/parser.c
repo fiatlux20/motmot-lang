@@ -4,186 +4,162 @@
 
 #include "parser.h"
 
-/* program -> statement
- *
- * statement -> '{' statement_list '}'
- *            | IF '(' expr ')' statement
- *            | VAR identifier EQL expr ;
- *
- * statement_list -> statement
- *                 | statement_list ';' statement
- *
- * expr -> identifier
- *       | literal
- *       | unary
- *       | binary
- *       | grouping
- * 
- * binary -> expr operator expr
- * 
- * grouping -> LPAREN expr RPAREN
- * 
- *
- * literal -> number
- *          | string
- *          | boolean
- *
- * operator -> plus
- *           | minus
- */
+static void advance(ParserState*);
+static void parse_precedence(ParserState*, Precedence);
+static void expression(ParserState*);
+static void binary(ParserState*);
+static void grouping(ParserState*);
+static void unary(ParserState*);
+static void number(ParserState*);
+static void identifier(ParserState*);
+
+const static Rule rules[] = {
+    [T_NONE]         = { NULL,       NULL,   PREC_NONE },
+    [T_EOF]          = { NULL,       NULL,   PREC_NONE },
+    [T_ERROR]        = { NULL,       NULL,   PREC_NONE },
+    [T_NIL]          = { NULL,       NULL,   PREC_NONE },
+    [T_IDENTIFIER]   = { identifier, NULL,   PREC_NONE },
+    [T_STRING]       = { NULL,       NULL,   PREC_NONE },
+    [T_NUMBER]       = { number,     NULL,   PREC_NONE },
+    [T_BOOLEAN]      = { NULL,       NULL,   PREC_NONE },
+    [T_AND]          = { NULL,       NULL,   PREC_NONE },
+    [T_OR]           = { NULL,       NULL,   PREC_NONE },
+    [T_FUN]          = { NULL,       NULL,   PREC_NONE },
+    [T_IF]           = { NULL,       NULL,   PREC_NONE },
+    [T_ELSE]         = { NULL,       NULL,   PREC_NONE },
+    [T_FOR]          = { NULL,       NULL,   PREC_NONE },
+    [T_WHILE]        = { NULL,       NULL,   PREC_NONE },
+    [T_VAR]          = { NULL,       NULL,   PREC_NONE },
+    [T_TRUE]         = { NULL,       NULL,   PREC_NONE },
+    [T_FALSE]        = { NULL,       NULL,   PREC_NONE },
+    [T_LPAREN]       = { grouping,   NULL,   PREC_NONE },
+    [T_RPAREN]       = { NULL,       NULL,   PREC_NONE },
+    [T_LBRACKET]     = { NULL,       NULL,   PREC_NONE },
+    [T_RBRACKET]     = { NULL,       NULL,   PREC_NONE },
+    [T_LCURLY]       = { NULL,       NULL,   PREC_NONE },
+    [T_RCURLY]       = { NULL,       NULL,   PREC_NONE },
+    [T_QUOTE]        = { NULL,       NULL,   PREC_NONE },
+    [T_DBL_QUOTE]    = { NULL,       NULL,   PREC_NONE },
+    [T_SEMICOLON]    = { NULL,       NULL,   PREC_NONE },
+    [T_COMMA]        = { NULL,       NULL,   PREC_NONE },
+    [T_DOT]          = { NULL,       NULL,   PREC_NONE },
+    [T_HASHTAG]      = { NULL,       NULL,   PREC_NONE },
+    [T_CARET]        = { NULL,       NULL,   PREC_NONE },
+    [T_PIPE]         = { NULL,       NULL,   PREC_NONE },
+    [T_AMP]          = { NULL,       NULL,   PREC_NONE },
+    [T_EQL]          = { NULL,       NULL,   PREC_NONE },
+    [T_DBL_EQL]      = { NULL,       NULL,   PREC_NONE },
+    [T_BANG]         = { NULL,       NULL,   PREC_NONE },
+    [T_BANG_EQL]     = { NULL,       NULL,   PREC_NONE },
+    [T_GREATER]      = { NULL,       NULL,   PREC_NONE },
+    [T_LESS]         = { NULL,       NULL,   PREC_NONE },
+    [T_GREATER_EQL]  = { NULL,       NULL,   PREC_NONE },
+    [T_LESS_EQL]     = { NULL,       NULL,   PREC_NONE },
+    [T_PLUS]         = { NULL,       binary, PREC_TERM },
+    [T_MINUS]        = { unary,      binary, PREC_TERM },
+    [T_ASTERISK]     = { NULL,       binary, PREC_FACTOR },
+    [T_SLASH]        = { NULL,       binary, PREC_FACTOR },
+    [T_PLUS_PLUS]    = { NULL,       NULL,   PREC_NONE },
+    [T_MINUS_MINUS]  = { NULL,       NULL,   PREC_NONE },
+    [T_PLUS_EQL]     = { NULL,       NULL,   PREC_NONE },
+    [T_MINUS_EQL]    = { NULL,       NULL,   PREC_NONE },
+    [T_ASTERISK_EQL] = { NULL,       NULL,   PREC_NONE },
+    [T_SLASH_EQL]    = { NULL,       NULL,   PREC_NONE },
+};
 
 
-static unsigned int operator(Token *t) {
-    if (t == NULL) {
-        return 0;
-    }
+/* public functions */
+BytecodeArray *parse(VirtualMachine *vm, TokenArray *tokens) {
+    dynarray_iterator iter = { tokens->count, 0 };
+    BytecodeArray *bytecode = create_bytecode_dynarray();
+    bytecode->names = &vm->names;
 
-    unsigned int type = t->type;
+    ParserState s;
+    s.current = tokens->tokens;
+    s.prev = NULL;
+    s.bytecode = bytecode;
+    s.iter = &iter;
+    s.error = 0;
 
-    return type == T_PLUS     || type == T_MINUS
-        || type == T_ASTERISK || type == T_SLASH
-        || type == T_GREATER  || type == T_LESS
-        || type == T_BANG;
+    expression(&s);
+    // statement(&s);
+
+    #ifdef DEBUG_PARSER
+    printf("index at %ld out of %d\n", s.current - tokens->tokens, tokens->count);
+    #endif
+
+    return bytecode;
 }
 
-static unsigned int is_value(Token *t) {
-    if (t == NULL) {
-        return 0;
-    }
 
-    unsigned int type = t->type;
-
-    return type == T_IDENTIFIER || type == T_NUMBER || type == T_STRING;
+/* private functions */
+static const Rule *const get_rule(Token *token) {
+    return &rules[token->type];
 }
 
-static unsigned int accept(Token *t, unsigned int token_type) {
-    if (t == NULL) {
-        return 0;
-    }
-    return t->type == token_type;
+static void advance(ParserState *parser) {
+    parser->prev = parser->current;
+    parser->current++;
 }
 
-static unsigned int expect(ParserState *s, unsigned int token_type) {
-    Token *t = current_token(s->tokens, s->iter);
-    if (t == NULL || t->type != token_type) {
-        s->error = 1;
-        return 0;
-    }
-
-    next_token(s->tokens, s->iter);
-    return 1;
-}
-
-static unsigned int expect_operator(ParserState *s) {
-    Token *t = current_token(s->tokens, s->iter);
-    if (t == NULL || !operator(t)) {
-        s->error = 1;
-        return 0;
-    }
-
-    next_token(s->tokens, s->iter);
-    return 1;
-}
-
-static unsigned int expect_value(ParserState *s) {
-    Token *t = current_token(s->tokens, s->iter);
-    if (t == NULL || !is_value(t)) {
-        s->error = 1;
-        return 0;
-    }
-
-    next_token(s->tokens, s->iter);
-    return 1;
-}
-
-/* bytecode functions */
-void index_of(NameArray *names, char *str, int *ind) {
-    for (unsigned int i = 0; i < names->elements; i++) {
-        if (strcmp(names->array[i], str) == 0) {
-            *ind = i;
-            return;
-        }
-    }
-
-    *ind = -1;
-}
-void emit_opcode(BytecodeArray *array, opcode_t opcode) {
-    append_to_bytecode_dynarray(array, opcode);
+void emit_opcode(BytecodeArray *array, opcode_t op) {
+    append_to_bytecode_dynarray(array, op);
 }
 
 void emit_constant(BytecodeArray *array, Value val) {
     append_to_bytecode_dynarray(array, OP_CONSTANT);
-    append_to_bytecode_dynarray(array, array->constants.elements); // index of constant
-    append_to_value_dynarray(&(array->constants), val);
+    append_to_bytecode_dynarray(array, array->constants->elements); // index of constant
+    append_to_value_dynarray(array->constants, val);
 }
 
-void emit_set_name(BytecodeArray *array, char *str) {
-    int ind = -1;
-    index_of(array->names, str, &ind);
-    append_to_bytecode_dynarray(array, OP_SET_GLOBAL);
+static void parse_precedence(ParserState *parser, Precedence prec) {
+    #ifdef DEBUG_PARSER
+    printf("in parse_precedence\n");
+    #endif
 
-    if (ind == -1) {
-        append_to_bytecode_dynarray(array, array->names->elements); // index of constant
-        append_to_name_dynarray(array->names, str);    
-    } else {
-        append_to_bytecode_dynarray(array, ind);
+    ParsingFunction prefix = get_rule(parser->current)->prefix;
+
+    if (prefix == NULL) {
+        printf("expected expression\n");
+        return;
     }
 
-}
+    prefix(parser);
 
-void emit_update_name(BytecodeArray *array, char *str) {
-    int ind = -1;
-    index_of(array->names, str, &ind);
-    append_to_bytecode_dynarray(array, OP_UPDATE_GLOBAL);
-
-    if (ind == -1) {
-        append_to_bytecode_dynarray(array, array->names->elements); // index of constant
-        append_to_name_dynarray(array->names, str);    
-    } else {
-        append_to_bytecode_dynarray(array, ind);
-    }
-
-}
-
-void emit_get_name(BytecodeArray *array, char *str) {
-    int ind = -1;
-    index_of(array->names, str, &ind);
-    append_to_bytecode_dynarray(array, OP_GET_GLOBAL);
-
-    if (ind == -1) {
-        append_to_bytecode_dynarray(array, array->names->elements); // index of constant
-        append_to_name_dynarray(array->names, str);    
-    } else {
-        append_to_bytecode_dynarray(array, ind);
+    while (prec <= get_rule(parser->current)->precedence) {
+        ParsingFunction infix = get_rule(parser->current)->infix;
+        infix(parser);
     }
 }
 
-/* matching groups */
-static void binary(ParserState *s);
-static void unary(ParserState *s);
-static void grouping(ParserState *s);
-static void block(ParserState *s);
-static void expression(ParserState *s);
-static void statement(ParserState *s);
-static void if_statement(ParserState *s);
+static void expression(ParserState *parser) {
+    parse_precedence(parser, PREC_ASSIGNMENT);
+}
 
-static void binary(ParserState *s) {
+static void identifier(ParserState *parser) {
+
+}
+
+static void grouping(ParserState *parser) {
+    
+}
+
+static void binary(ParserState *parser) {
     #ifdef DEBUG_PARSER
     printf("in binary\n");
     #endif
 
-    Token *operator = current_token(s->tokens, s->iter);
-
-    expect_operator(s);
-    expression(s);
+    Token *operator = parser->current;
+    advance(parser);
+    parse_precedence(parser, get_rule(operator)->precedence + 1);
 
     switch (operator->type) {
-        case T_PLUS: emit_opcode(s->bytecode, OP_ADD); break;
-        case T_MINUS: emit_opcode(s->bytecode, OP_SUB); break;
-        case T_ASTERISK: emit_opcode(s->bytecode, OP_MULT); break;
-        case T_SLASH: emit_opcode(s->bytecode, OP_DIV); break;
+        case T_PLUS: emit_opcode(parser->bytecode, OP_ADD); break;
+        case T_MINUS: emit_opcode(parser->bytecode, OP_SUB); break;
+        case T_ASTERISK: emit_opcode(parser->bytecode, OP_MULT); break;
+        case T_SLASH: emit_opcode(parser->bytecode, OP_DIV); break;
         default:
-            break;
+        break;
     }
 
     #ifdef DEBUG_PARSER
@@ -191,190 +167,34 @@ static void binary(ParserState *s) {
     #endif
 }
 
-static void unary(ParserState *s) {
+static void unary(ParserState *parser) {
     #ifdef DEBUG_PARSER
     printf("in unary\n");
     #endif
 
-    expect_operator(s);
-    expression(s);
+    Token *operator = parser->current;
+    advance(parser);
+    parse_precedence(parser, get_rule(operator)->precedence + 1);
 
+    switch (operator->type) {
+        case T_MINUS: emit_opcode(parser->bytecode, OP_SUB); break;
+        default:
+        break;
+    }
     #ifdef DEBUG_PARSER
     printf("out of unary\n");
     #endif
 }
 
-static void grouping(ParserState *s) {
+static void number(ParserState *s) {
     #ifdef DEBUG_PARSER
-    printf("in grouping\n");
+    printf("in number\n");
     #endif
 
-    expect(s, T_LPAREN);
-    expression(s);
-    expect(s, T_RPAREN);
+    emit_constant(s->bytecode, double_value(atof(s->current->value)));
+    advance(s);
 
     #ifdef DEBUG_PARSER
-    printf("out of grouping\n");
+    printf("out of number\n");
     #endif
-
-    if (s->error != 0) {
-        report_error("SyntaxError", "Missing parenthesis.");
-        s->error = 0;
-    }
-}
-
-static void block(ParserState *s) {
-    expect(s, T_LCURLY);
-    statement(s);
-    expect(s, T_RCURLY);
-}
-
-static void expression(ParserState *s) {
-    #ifdef DEBUG_PARSER
-    printf("in expression\n");
-    #endif
-
-    Token *t = current_token(s->tokens, s->iter);
-    if (t == NULL) {
-        return;
-    }
-
-    if (operator(t)) {
-        unary(s);
-        return;
-    }
-
-    Token *next = peek_next_token(s->tokens, s->iter);
-    if (next == NULL) {
-        return;
-    }
-
-    switch (t->type) {
-    case T_NUMBER:
-        emit_constant(s->bytecode, double_value(atof(t->value)));
-        next_token(s->tokens, s->iter);
-        break;
-    case T_IDENTIFIER:
-        emit_get_name(s->bytecode, t->value);
-        next_token(s->tokens, s->iter);
-        break;
-    case T_STRING:
-        emit_constant(s->bytecode, string_value(t->value));
- // case T_BOOLEAN:
-        next_token(s->tokens, s->iter);
-        // if (operator(next)) {
-        //     binary(s);
-        // }
-        break;
-    case T_LPAREN:
-        grouping(s);
-        break;
-    default:
-        next_token(s->tokens, s->iter);
-        break;
-    }
-
-    t = current_token(s->tokens, s->iter);
-    if (operator(t)) {
-        binary(s);
-    }
-
-    if (s->error != 0) {
-        if (t != NULL) {
-            report_error("SyntaxError", "invalid token while parsing expression");
-            fprintf(stderr, "%d\n", t->type);
-        }
-        report_error("SyntaxError", "Null token encountered while parsing expression.");
-        s->error = 0;
-    }
-}
-
-static void assignment(ParserState *s) {
-    expect(s, T_VAR);
-    Token *name = current_token(s->tokens, s->iter);
-    expect(s, T_IDENTIFIER);
-    expect(s, T_EQL);
-    expression(s);
-
-    emit_set_name(s->bytecode, name->value);
-}
-
-static void statement(ParserState *s) {
-    Token *t = current_token(s->tokens, s->iter);
-    Token *temp;
-
-    if (t == NULL) {
-        return;
-    }
-
-    switch (t->type) {
-    case T_IF:
-        if_statement(s);
-        return;
-    case T_VAR:
-        assignment(s);
-        break;
-    case T_LCURLY:
-        block(s);
-        return;
-    case T_IDENTIFIER:
-        if (peek_next_token(s->tokens, s->iter)->type == T_EQL) {
-            temp = current_token(s->tokens, s->iter);
-            next_token(s->tokens, s->iter);
-            next_token(s->tokens, s->iter);
-            expression(s);
-            emit_update_name(s->bytecode, temp->value);
-            next_token(s->tokens, s->iter);
-        }
-    default:
-        expression(s);
-        if (s->error != 0) {
-            report_error("SyntaxError", "invalid token encountered while parsing statement.");
-            s->error = 0;
-        }
-        break;
-    }
-
-    expect(s, T_SEMICOLON);
-    if (s->error != 0) {
-        report_error("SyntaxError", "Missing semicolon in statement.");
-        s->error = 0;
-    }
-
-    if (s->error != 0) {
-        report_error("SyntaxError", "invalid token while parsing statement");
-        s->error = 0;
-    }
-}
-
-static void if_statement(ParserState *s) {
-    expect(s, T_IF);
-
-    expect(s, T_LPAREN);
-    expression(s);
-    expect(s, T_RPAREN);
-
-    statement(s);
-}
-
-/* public functions */
-BytecodeArray parse(VirtualMachine *vm, TokenArray *tokens) {
-    dynarray_iterator iter = { tokens->count, 0 };
-    BytecodeArray bytecode = create_bytecode_dynarray();
-    bytecode.names = &vm->names;
-
-    ParserState s;
-    s.tokens = tokens;
-    s.bytecode = &bytecode;
-    s.iter = &iter;
-    s.error = 0;
-
-    // expression(&s);
-    statement(&s);
-
-    #ifdef DEBUG_PARSER
-    printf("index at %d out of %d\n", iter.index + 1, tokens->count);
-    #endif
-
-    return bytecode;
 }

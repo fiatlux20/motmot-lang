@@ -3,11 +3,9 @@
 
 #include "common.h"
 
-typedef struct rule Rule;
 typedef struct token Token;
 typedef struct token_dynamic_array TokenArray;
 
-typedef void (*ParsingFunction)();
 
 typedef enum {
     T_NONE,
@@ -70,17 +68,6 @@ typedef enum {
     T_SLASH_EQL
 } TokenType;
 
-typedef enum {
-    PREC_NONE,
-    PREC_TERM,
-    PREC_FACTOR
-} Precedence;
-
-struct rule {
-    ParsingFunction prefix;
-    ParsingFunction infix;
-    Precedence precedence;
-};
 
 struct token {
     char *value;

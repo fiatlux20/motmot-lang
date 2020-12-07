@@ -73,9 +73,9 @@ static void op_sub(Stack *s) {
     Value b = pop(s);
 
     if (a.type == VAL_TYPE_DOUBLE && b.type == VAL_TYPE_DOUBLE) {
-        push(s, double_value(a.as.real - b.as.real));
+        push(s, double_value(b.as.real - a.as.real));
     } else if (a.type == VAL_TYPE_INTEGER && b.type == VAL_TYPE_INTEGER) {
-        push(s, int_value(a.as.integer - b.as.integer));
+        push(s, int_value(b.as.integer - a.as.integer));
     } else {
         // error
     }
@@ -150,7 +150,7 @@ unsigned int execute(VirtualMachine *vm, BytecodeArray *bytecode) {
         case OP_RETURN:
             goto end;
         case OP_CONSTANT:
-            push(&vm->stack, bytecode->constants.array[bytecode->array[i + 1]]);
+            push(&vm->stack, bytecode->constants->array[bytecode->array[i + 1]]);
             i++;
             break;
         case OP_GET_GLOBAL:
