@@ -113,14 +113,53 @@ static int at_end(ParserState *parser) {
     return parser->current->type == T_EOF;
 }
 
-void emit_opcode(BytecodeArray *array, opcode_t op) {
+static void index_of(NameArray *names, char *str, int *ind) {
+    for (unsigned int i = 0; i < names->elements; i++) {
+        if (strcmp(names->array[i], str) == 0) {
+            *ind = i;
+            return;
+        }
+    }
+
+    *ind = -1;
+}
+
+static void emit_opcode(BytecodeArray *array, opcode_t op) {
     append_to_bytecode_dynarray(array, op);
 }
 
-void emit_constant(BytecodeArray *array, Value val) {
+static void emit_constant(BytecodeArray *array, Value val) {
     append_to_bytecode_dynarray(array, OP_CONSTANT);
     append_to_bytecode_dynarray(array, array->constants->elements); // index of constant
     append_to_value_dynarray(array->constants, val);
+}
+
+static void emit_set_name(ParserState *parser, char *str) {
+    BytecodeArray *code = parser->bytecode;
+    int ind = -1;
+    index_of(code->names, str, &ind);
+    append_to_bytecode_dynarray(code, OP_SET_GLOBAL);
+
+    if (ind == -1) {
+        append_to_bytecode_dynarray(code, code->names->elements); // index of constant
+        append_to_name_dynarray(code->names, str);    
+    } else {
+        append_to_bytecode_dynarray(code, ind);
+    }
+}
+
+static void emit_get_name(ParserState *parser, char *str) {
+    BytecodeArray *code = parser->bytecode;
+    int ind = -1;
+    index_of(code->names, str, &ind);
+    append_to_bytecode_dynarray(code, OP_GET_GLOBAL);
+
+    if (ind == -1) {
+        append_to_bytecode_dynarray(code, code->names->elements); // index of constant
+        append_to_name_dynarray(code->names, str);    
+    } else {
+        append_to_bytecode_dynarray(code, ind);
+    }
 }
 
 /* parsing functions */
@@ -146,10 +185,6 @@ static void parse_precedence(ParserState *parser, Precedence prec) {
 
 static void expression(ParserState *parser) {
     parse_precedence(parser, PREC_ASSIGNMENT);
-}
-
-static void identifier(ParserState *parser) {
-
 }
 
 static void binary(ParserState *parser) {
@@ -194,6 +229,11 @@ static void unary(ParserState *parser) {
     #endif
 }
 
+static void identifier(ParserState *parser) {
+    emit_get_name(parser, parser->current->value);
+    advance(parser);
+}
+
 static void number(ParserState *s) {
     #ifdef DEBUG_PARSER
     printf("in number\n");
@@ -233,19 +273,24 @@ static void grouping(ParserState *s) {
 }
 
 /* var x = expr */
-static void assignment(ParserState *s) {
-    advance(s);
+static void assignment(ParserState *parser) {
+    advance(parser);
     /* expect identifier, push name */
-    if (!expect(s, T_IDENTIFIER)) {
+    if (!expect(parser, T_IDENTIFIER)) {
         report_error("SyntaxError", "Expected identifier in assignment statement");
         return;
     }
 
-    advance(s);
-    if (!expect(s, T_IDENTIFIER)) {
+    Token *name = parser->current;
+
+    advance(parser);
+    if (!expect(parser, T_EQL)) {
         report_error("SyntaxError", "Expected '=' after variable in assignment statement");
         return;
     }
 
-    expression(s);
+    advance(parser);
+    expression(parser);
+
+    emit_set_name(parser, name->value);
 }
