@@ -1,0 +1,111 @@
+\hypertarget{parser_8h}{}\section{include/parser.h File Reference}
+\label{parser_8h}\index{include/parser.\+h@{include/parser.\+h}}
+\subsection*{Data Structures}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structrule}{rule}
+\item 
+struct \hyperlink{structbyte__array}{byte\+\_\+array}
+\item 
+struct \hyperlink{structparser}{parser}
+\item 
+struct \hyperlink{structChunk}{Chunk}
+\end{DoxyCompactItemize}
+\subsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{parser_8h_aa045e14e6c37e43b762ccba9c3ed6d9e}\label{parser_8h_aa045e14e6c37e43b762ccba9c3ed6d9e}} 
+typedef struct \hyperlink{structtoken}{token} {\bfseries Token}
+\item 
+\mbox{\Hypertarget{parser_8h_a000a83e490a832c2d97ed7cb0c7a5900}\label{parser_8h_a000a83e490a832c2d97ed7cb0c7a5900}} 
+typedef struct \hyperlink{structtoken__array}{token\+\_\+array} {\bfseries Token\+Array}
+\item 
+\mbox{\Hypertarget{parser_8h_ab78ad9ddc29c66bebfd2732f7fe07fa9}\label{parser_8h_ab78ad9ddc29c66bebfd2732f7fe07fa9}} 
+typedef struct \hyperlink{structfunction__table}{function\+\_\+table} {\bfseries Function\+Table}
+\item 
+\mbox{\Hypertarget{parser_8h_a026c14f7a3c74c9743af8ef5c78bbe49}\label{parser_8h_a026c14f7a3c74c9743af8ef5c78bbe49}} 
+typedef struct \hyperlink{structparser}{parser} {\bfseries Parser\+State}
+\item 
+\mbox{\Hypertarget{parser_8h_a995596d787f0d811c0bc471faee03ad0}\label{parser_8h_a995596d787f0d811c0bc471faee03ad0}} 
+typedef void($\ast$ {\bfseries Parse\+Fn}) (\hyperlink{structparser}{Parser\+State} $\ast$)
+\item 
+\mbox{\Hypertarget{parser_8h_a7ef63936a25dff9d692003e930e37fe4}\label{parser_8h_a7ef63936a25dff9d692003e930e37fe4}} 
+typedef struct \hyperlink{structrule}{rule} {\bfseries Rule}
+\item 
+\mbox{\Hypertarget{parser_8h_a4b00294acca744e89b60450a12db52b4}\label{parser_8h_a4b00294acca744e89b60450a12db52b4}} 
+typedef struct \hyperlink{structbyte__array}{byte\+\_\+array} {\bfseries Byte\+Array}
+\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{parser_8h_aa4e7d1a473d0280792d98ddb184d3006}\label{parser_8h_aa4e7d1a473d0280792d98ddb184d3006}} 
+enum {\bfseries Precedence} \{ \newline
+{\bfseries P\+R\+E\+C\+\_\+\+N\+O\+NE}, 
+{\bfseries P\+R\+E\+C\+\_\+\+N\+U\+M\+B\+ER}, 
+{\bfseries P\+R\+E\+C\+\_\+\+E\+Q\+U\+A\+L\+I\+TY}, 
+{\bfseries P\+R\+E\+C\+\_\+\+T\+E\+RM}, 
+\newline
+{\bfseries P\+R\+E\+C\+\_\+\+F\+A\+C\+T\+OR}, 
+{\bfseries P\+R\+E\+C\+\_\+\+C\+A\+LL}, 
+{\bfseries P\+R\+E\+C\+\_\+\+D\+E\+F\+UN}
+ \}
+\item 
+\mbox{\Hypertarget{parser_8h_acbd603b5f7c788a74eade8d4837ba684}\label{parser_8h_acbd603b5f7c788a74eade8d4837ba684}} 
+enum {\bfseries Instruction} \{ \newline
+{\bfseries I\+\_\+\+M\+OV}, 
+{\bfseries I\+\_\+\+M\+O\+V\+A\+PS}, 
+{\bfseries I\+\_\+\+A\+DD}, 
+{\bfseries I\+\_\+\+S\+UB}, 
+\newline
+{\bfseries I\+\_\+\+M\+UL}, 
+{\bfseries I\+\_\+\+D\+IV}, 
+{\bfseries I\+\_\+\+S\+Q\+RT}, 
+{\bfseries I\+\_\+\+X\+OR}, 
+\newline
+{\bfseries I\+\_\+\+R\+O\+U\+ND}
+ \}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{structparser}{Parser\+State} $\ast$ \hyperlink{parser_8h_a4e8099406c2e0ac72f75f8b33dfbf42e}{parse} (\hyperlink{structtoken__array}{Token\+Array} $\ast$tokens, \hyperlink{structfunction__table}{Function\+Table} $\ast$functions)
+\item 
+void \hyperlink{parser_8h_a116f6b387d06b4a66c7f48db0e92cc22}{free\+\_\+parser} (\hyperlink{structparser}{Parser\+State} $\ast$\hyperlink{structparser}{parser})
+\item 
+\mbox{\Hypertarget{parser_8h_a9b0029423f49072e3eb04b38780299a5}\label{parser_8h_a9b0029423f49072e3eb04b38780299a5}} 
+void {\bfseries disassemble} (\hyperlink{structbyte__array}{Byte\+Array} $\ast$code)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Contains functions related to parsing expressions from an array of tokens 
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{parser_8h_a116f6b387d06b4a66c7f48db0e92cc22}\label{parser_8h_a116f6b387d06b4a66c7f48db0e92cc22}} 
+\index{parser.\+h@{parser.\+h}!free\+\_\+parser@{free\+\_\+parser}}
+\index{free\+\_\+parser@{free\+\_\+parser}!parser.\+h@{parser.\+h}}
+\subsubsection{\texorpdfstring{free\+\_\+parser()}{free\_parser()}}
+{\footnotesize\ttfamily void free\+\_\+parser (\begin{DoxyParamCaption}\item[{\hyperlink{structparser}{Parser\+State} $\ast$}]{parser }\end{DoxyParamCaption})}
+
+Frees all heap allocated memory used by the Parser struct and sets the pointer to N\+U\+LL
+
+
+\begin{DoxyParams}{Parameters}
+{\em parser} & The pointer to the parser state to free. Set to N\+U\+LL after the function returns. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{parser_8h_a4e8099406c2e0ac72f75f8b33dfbf42e}\label{parser_8h_a4e8099406c2e0ac72f75f8b33dfbf42e}} 
+\index{parser.\+h@{parser.\+h}!parse@{parse}}
+\index{parse@{parse}!parser.\+h@{parser.\+h}}
+\subsubsection{\texorpdfstring{parse()}{parse()}}
+{\footnotesize\ttfamily \hyperlink{structparser}{Parser\+State}$\ast$ parse (\begin{DoxyParamCaption}\item[{\hyperlink{structtoken__array}{Token\+Array} $\ast$}]{tokens,  }\item[{\hyperlink{structfunction__table}{Function\+Table} $\ast$}]{functions }\end{DoxyParamCaption})}
+
+Returns the parser state after parsing an array of tokens which includes
+
+
+\begin{DoxyParams}{Parameters}
+{\em tokens} & The array of tokens to be parsed \\
+\hline
+{\em functions} & \\
+\hline
+\end{DoxyParams}

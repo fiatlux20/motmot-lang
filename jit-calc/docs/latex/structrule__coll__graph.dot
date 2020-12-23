@@ -1,0 +1,22 @@
+digraph "rule"
+{
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  Node1 [label="rule",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
+  Node2 -> Node1 [dir="back",color="darkorchid3",fontsize="10",style="dashed",label=" prefix\ninfix" ];
+  Node2 [label="parser",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structparser.html"];
+  Node3 -> Node2 [dir="back",color="darkorchid3",fontsize="10",style="dashed",label=" current" ];
+  Node3 [label="token",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structtoken.html"];
+  Node4 -> Node2 [dir="back",color="darkorchid3",fontsize="10",style="dashed",label=" functions" ];
+  Node4 [label="function_table",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structfunction__table.html"];
+  Node5 -> Node4 [dir="back",color="darkorchid3",fontsize="10",style="dashed",label=" keys" ];
+  Node5 [label="key_array",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structkey__array.html"];
+  Node6 -> Node4 [dir="back",color="darkorchid3",fontsize="10",style="dashed",label=" table" ];
+  Node6 [label="hash_table",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structhash__table.html"];
+  Node7 -> Node6 [dir="back",color="darkorchid3",fontsize="10",style="dashed",label=" entries" ];
+  Node7 [label="entry",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structentry.html"];
+  Node8 -> Node7 [dir="back",color="darkorchid3",fontsize="10",style="dashed",label=" value" ];
+  Node8 [label="function",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structfunction.html"];
+  Node9 -> Node2 [dir="back",color="darkorchid3",fontsize="10",style="dashed",label=" code" ];
+  Node9 [label="byte_array",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$structbyte__array.html"];
+}

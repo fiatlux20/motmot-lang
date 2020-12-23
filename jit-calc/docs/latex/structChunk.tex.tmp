@@ -1,0 +1,27 @@
+\hypertarget{structChunk}{}\section{Chunk Struct Reference}
+\label{structChunk}\index{Chunk@{Chunk}}
+
+
+Collaboration diagram for Chunk\+:
+% FIG 0
+\subsection*{Data Fields}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{structChunk_aaf5df433250bd3dd879020c7d32e9ab0}\label{structChunk_aaf5df433250bd3dd879020c7d32e9ab0}} 
+float $\ast$ {\bfseries constants}
+\item 
+\mbox{\Hypertarget{structChunk_a0975d4491d75aff1f473c9ddd70fc0fe}\label{structChunk_a0975d4491d75aff1f473c9ddd70fc0fe}} 
+\hyperlink{structbyte__array}{Byte\+Array} $\ast$ {\bfseries code}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+
+
+Definition at line 60 of file parser.\+h.
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+include/\hyperlink{parser_8h}{parser.\+h}\end{DoxyCompactItemize}
