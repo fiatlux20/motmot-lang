@@ -27,3 +27,4 @@ docs: $(SOURCES) $(HEADERS)
 clean:
 	rm -f $(OUT_FILE)
 	rm -rf $(ODIR)
+	rm -rf docs

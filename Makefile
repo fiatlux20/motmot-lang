@@ -27,8 +27,12 @@ $(ODIR):
 $(TEST_FILE): tests/test.c $(filter-out $(ODIR)/main.o, $(OBJ))
 	$(CC) $^ $(CFLAGS) -o $@
 
+docs: $(SOURCES) $(HEADERS)
+	doxygen Doxyfile
+
 .PHONY: clean
 clean:
 	rm -f $(OUT_FILE)
 	rm -f $(TEST_FILE)
 	rm -rf $(ODIR)
+	rm -rf docs

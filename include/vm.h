@@ -1,3 +1,4 @@
+/** @file vm.h */
 #ifndef _VM_H_
 #define _VM_H_
 
@@ -28,6 +29,14 @@ typedef struct {
 } VirtualMachine;
 
 VirtualMachine initialize_vm();
+
+/**
+ * Takes a virtual machine and an array of bytecode and executes the bytecode.
+ *
+ * @param vm
+ * @param bytecode
+ * @return success
+ */
 unsigned int execute(VirtualMachine *vm, BytecodeArray *bytecode);
 void free_vm(VirtualMachine *vm);
 
