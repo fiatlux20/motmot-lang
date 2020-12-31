@@ -4,6 +4,7 @@
 
 #include "test.h"
 #include "test_table.h"
+#include "test_component.h"
 
 /* writing tests:
  *
@@ -33,5 +34,6 @@ int main() {
     TEST(test_ht_add_entry, "Adding 3 entries to a hash table and then retrieving them");
     TEST(test_ht_resize, "Adding 8 entries to a hash table to force a resize and then retrieving them");
     TEST(test_ht_stress, "Add 2000 entries, delete 2000 entries, add 2000 new entries");
+    TEST(test_motmot_arithmetic, "Source strings compile to expected bytecode and evaluate to expected result");
 }
 

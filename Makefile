@@ -9,7 +9,7 @@ TEST_FILE := test
 CC := gcc
 CWARNS := -Wall -Wshadow -Wpointer-arith -Wcast-align -Wstrict-aliasing=1 # -Waggregate-return
 DEFINES := -DMAJOR_VERS=$(MAJOR_VERS) -DMINOR_VERS=$(MINOR_VERS)
-CFLAGS := -I./$(IDIR) $(CWARNS) $(DEFINES) -Og -g -fsanitize=address
+CFLAGS := -I./$(IDIR) $(CWARNS) $(DEFINES) # -Og -g -fsanitize=address
 
 HEADERS := $(wildcard $(IDIR)/*.h)
 SOURCES := $(wildcard $(SDIR)/*.c)
@@ -24,8 +24,8 @@ $(OUT_FILE): $(OBJ)
 $(ODIR):
 	mkdir $(ODIR)
 
-$(TEST_FILE): tests/test.c $(filter-out $(ODIR)/main.o, $(OBJ))
-	$(CC) $^ $(CFLAGS) -o $@
+$(TEST_FILE): tests/test.c $(filter-out $(ODIR)/main.o, $(OBJ)) $(wildcard tests/*.h)
+	$(CC) $^ -I./$(IDIR) $(CWARNS) $(DEFINES) -g -o $@
 
 docs: $(SOURCES) $(HEADERS)
 	doxygen Doxyfile

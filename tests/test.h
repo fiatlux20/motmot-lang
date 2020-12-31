@@ -27,7 +27,7 @@
 
 #define TEST(testfn, description) \
     do { \
-        printf("TEST %d: %s - ", __LINE__, description); \
+        printf("TEST %d: %s\n", __LINE__, description); \
         testfn(); \
     } while (0)
 
@@ -49,7 +49,7 @@
 #define INIT_TEST() \
     int test_code = 0; \
     int overall_code = 0; \
-    printf("%d:%s\n", __LINE__, __func__);
+    printf("%s, %d:%s\n", __FILE__, __LINE__, __func__);
 
 #define END_TEST() \
     if (overall_code == 0) printf("%s PASSED\n", __func__); \
