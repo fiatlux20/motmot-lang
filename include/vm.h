@@ -30,6 +30,18 @@ typedef struct {
 
 VirtualMachine initialize_vm();
 
+void push(Stack *s, Value val);
+Value pop(Stack *s);
+
+/**
+ * Takes a virtual machine and an array of bytecode and executes the bytecode,
+ * leaving the result on the stack.
+ *
+ * @param vm
+ * @param bytecode
+ */
+void evaluate(VirtualMachine *vm, BytecodeArray *bytecode);
+
 /**
  * Takes a virtual machine and an array of bytecode and executes the bytecode.
  *

@@ -4,7 +4,7 @@
 
 #include "vm.h"
 
-static void push(Stack *s, Value val) {
+void push(Stack *s, Value val) {
     s->head &= s->size - 1;
     s->at[s->head++] = val;
 #ifdef DEBUG_STACK
@@ -18,7 +18,7 @@ static void push(Stack *s, Value val) {
 #endif
 }
 
-static Value pop(Stack *s) {
+Value pop(Stack *s) {
     s->head &= s->size - 1;
     s->head--;
 
@@ -136,11 +136,7 @@ uint8_t next(uint8_t *ip) {
     return *(++ip);
 }
 
-unsigned int execute(VirtualMachine *vm, BytecodeArray *bytecode) {
-    if (vm == NULL || bytecode == NULL || bytecode->array == NULL) {
-        return 1;
-    }
-
+void evaluate(VirtualMachine *vm, BytecodeArray *bytecode) {
     uint8_t *ip = bytecode->array;
     unsigned int size = bytecode->elements;
     Entry *var;
@@ -148,7 +144,7 @@ unsigned int execute(VirtualMachine *vm, BytecodeArray *bytecode) {
     for (int i = 0; i < size; i++) {
         switch (bytecode->array[i]) {
         case OP_RETURN:
-            goto end;
+            break;
         case OP_CONSTANT:
             push(&vm->stack, bytecode->constants->array[bytecode->array[i + 1]]);
             i++;
@@ -161,7 +157,7 @@ unsigned int execute(VirtualMachine *vm, BytecodeArray *bytecode) {
                 report_error("RuntimeError",
                         "variable '%s' not found",
                         vm->names.array[bytecode->array[i+1]]);
-                goto end;
+                break;
             }
             i++;
             break;
@@ -177,7 +173,7 @@ unsigned int execute(VirtualMachine *vm, BytecodeArray *bytecode) {
                 report_error("RuntimeError",
                         "variable '%s' not found",
                         vm->names.array[bytecode->array[i+1]]);
-                goto end;
+                break;
             }
             i++;
             break;
@@ -195,10 +191,16 @@ unsigned int execute(VirtualMachine *vm, BytecodeArray *bytecode) {
             break;
         default:
             printf("unknown instruction\n");
-            goto end;
         }
     }
-end:
+}
+
+unsigned int execute(VirtualMachine *vm, BytecodeArray *bytecode) {
+    if (vm == NULL || bytecode == NULL || bytecode->array == NULL) {
+        return 0;
+    }
+
+    evaluate(vm, bytecode);
 
     if (vm->stack.head != 0) {
         Value v = pop(&vm->stack);
@@ -209,7 +211,7 @@ end:
     printf("--- contents of env ---\n");
     print_table(vm->env);
 #endif /* DEBUG_TABLE */
-    return 0;
+    return 1;
 }
 
 void free_vm(VirtualMachine *vm) {
