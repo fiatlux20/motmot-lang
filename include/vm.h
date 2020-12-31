@@ -30,12 +30,26 @@ typedef struct {
 
 VirtualMachine initialize_vm();
 
+/**
+ * Pushes a value onto the virtual machine stack and increments the stack head.
+ *
+ * @param s Pointer to the stack to push to
+ * @param val Value to push onto the stack
+ */
 void push(Stack *s, Value val);
+
+/**
+ * Pops and returns a value from the virtual machine stack and decrements the
+ * stack head.
+ *
+ * @param s Pointer to the stack to push to
+ * @return Value on top of the stack
+ */
 Value pop(Stack *s);
 
 /**
  * Takes a virtual machine and an array of bytecode and executes the bytecode,
- * leaving the result on the stack.
+ * leaving the result on top of the virtual machine's stack.
  *
  * @param vm
  * @param bytecode
@@ -43,7 +57,8 @@ Value pop(Stack *s);
 void evaluate(VirtualMachine *vm, BytecodeArray *bytecode);
 
 /**
- * Takes a virtual machine and an array of bytecode and executes the bytecode.
+ * Takes a virtual machine and an array of bytecode and executes the bytecode. If
+ * there is a value left on the virtual machine's stack it pops and prints the value.
  *
  * @param vm
  * @param bytecode
