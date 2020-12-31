@@ -146,7 +146,7 @@ void print_tokens(TokenArray *array) {
     }
 }
 
-Token *next_token(TokenArray *array, dynarray_iterator *iter) {
+Token *next_token(TokenArray *array, ArrayIterator *iter) {
     if (iter->index >= array->count) {
         return NULL;
     }
@@ -165,7 +165,7 @@ Token *next_token(TokenArray *array, dynarray_iterator *iter) {
     return &(array->tokens[iter->index]);
 }
 
-Token *peek_next_token(TokenArray *array, dynarray_iterator *iter) {
+Token *peek_next_token(TokenArray *array, ArrayIterator *iter) {
     if (iter->index + 1 >= array->count) {
         return NULL;
     }
@@ -178,7 +178,7 @@ Token *peek_next_token(TokenArray *array, dynarray_iterator *iter) {
     return &(array->tokens[iter->index + 1]);
 }
 
-Token *current_token(TokenArray *array, dynarray_iterator *iter) {
+Token *current_token(TokenArray *array, ArrayIterator *iter) {
     if (iter->index >= array->count) {
         return NULL;
     }
@@ -192,14 +192,14 @@ Token *current_token(TokenArray *array, dynarray_iterator *iter) {
 }
 
 #define foreach(var, array) \
-    dynarray_iterator _iter = { array->count, 0 }; \
+    ArrayIterator _iter = { array->count, 0 }; \
     while ((var = next_token(array, &_iter)) != NULL)
 
 
 // #define foreach(var, array, iter) while ((var = next_token(array, iter)) != NULL)
 void print_tokens2(TokenArray *array) {
     Token *t;
-    // dynarray_iterator iter = { array->count, 0 };
+    // ArrayIterator iter = { array->count, 0 };
 
     foreach(t, array) {
         print_token(t);

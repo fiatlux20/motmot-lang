@@ -5,7 +5,7 @@
 #include "common.h"
 
 typedef struct token Token;
-typedef struct token_dynamic_array TokenArray;
+typedef struct TokenArray TokenArray;
 
 typedef enum {
     T_NONE,
@@ -75,7 +75,7 @@ struct token {
     unsigned int line;
 };
 
-struct token_dynamic_array {
+struct TokenArray {
     Token *tokens;
     unsigned int capacity;
     unsigned int count;
@@ -138,7 +138,7 @@ void print_tokens2(TokenArray *array);
  * @param iter A dynamic array iterator.
  * @return The next token in the array.
  */
-Token *next_token(TokenArray *array, dynarray_iterator *iter);
+Token *next_token(TokenArray *array, ArrayIterator *iter);
 
 /**
  * Returns a pointer to the next token from the iterator but does not advance it.
@@ -147,7 +147,7 @@ Token *next_token(TokenArray *array, dynarray_iterator *iter);
  * @param iter A dynamic array iterator.
  * @return The next token in the array.
  */
-Token *peek_next_token(TokenArray *array, dynarray_iterator *iter);
+Token *peek_next_token(TokenArray *array, ArrayIterator *iter);
 
 /**
  * Returns a pointer to the token the iterator is currently at.
@@ -156,6 +156,6 @@ Token *peek_next_token(TokenArray *array, dynarray_iterator *iter);
  * @param iter A dynamic array iterator.
  * @return The next token in the array.
  */
-Token *current_token(TokenArray *array, dynarray_iterator *iter);
+Token *current_token(TokenArray *array, ArrayIterator *iter);
 
 #endif /* _TOKENS_H_ */

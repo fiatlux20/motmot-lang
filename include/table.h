@@ -16,22 +16,18 @@
 #define TABLE_DEFAULT_SIZE 8
 #define HEAP_ALLOCD
 
-typedef struct hash_table HashTable;
-typedef struct entry Entry;
-
-
-struct entry {
+typedef struct Entry {
     char *key;
     Value value;
     unsigned char occupied;
     unsigned char deleted;
-};
+} Entry;
 
-struct hash_table {
+typedef struct HashTable {
     Entry *entries;    
     unsigned int elements;
     unsigned int capacity;
-};
+} HashTable;
 
 /**
  * Heap-allocates memory for a hash table and initializes it. Must be freed with

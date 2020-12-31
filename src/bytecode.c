@@ -135,7 +135,7 @@ void append_to_bytecode_dynarray(BytecodeArray *array, opcode_t op) {
     array->array[array->elements++] = op;
 }
 
-opcode_t *next_opcode(BytecodeArray *array, dynarray_iterator *iter) {
+opcode_t *next_opcode(BytecodeArray *array, ArrayIterator *iter) {
     if (iter->index + 1 >= array->elements) {
         return NULL;
     }
@@ -174,7 +174,7 @@ static void print_opcode(opcode_t opcode) {
 
 // void print_disassembly(BytecodeArray *bytecode) {
 //     opcode_t *opcode;
-//     dynarray_iterator iter = { bytecode->elements, 0 };
+//     ArrayIterator iter = { bytecode->elements, 0 };
 
 //     fputs("--- Begin disassembly ---\n", stdout);
 //     while ((opcode = next_opcode(bytecode, &iter)) != NULL) {

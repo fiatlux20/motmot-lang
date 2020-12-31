@@ -69,7 +69,7 @@ void append_to_bytecode_dynarray(BytecodeArray *array, opcode_t op);
  * @param iter The iterator being used on the array.
  * @return The next opcode in the array.
  */
-opcode_t *next_opcode(BytecodeArray *array, dynarray_iterator *iter);
+opcode_t *next_opcode(BytecodeArray *array, ArrayIterator *iter);
 
 /**
  * Frees a heap-allocated bytecode array and sets the pointer to NULL.

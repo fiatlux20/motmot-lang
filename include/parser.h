@@ -10,17 +10,15 @@
 #include "tokens.h"
 #include "vm.h"
 
-typedef struct rule Rule;
-typedef struct parser_state ParserState;
-typedef void (*ParsingFunction)(ParserState* s);
-
-struct parser_state {
+typedef struct ParserState {
     Token *current;
     Token *prev;
-    dynarray_iterator *iter;
+    ArrayIterator *iter;
     BytecodeArray *bytecode;
     unsigned int error;
-};
+} ParserState;
+
+typedef void (*ParsingFunction)(ParserState* s);
 
 typedef enum {
     PREC_NONE,
@@ -29,11 +27,11 @@ typedef enum {
     PREC_FACTOR
 } Precedence;
 
-struct rule {
+typedef struct Rule {
     ParsingFunction prefix;
     ParsingFunction infix;
     Precedence precedence;
-};
+} Rule;
 
 /**
  * Takes a pointer to the virtual machine and an array of tokens and returns an

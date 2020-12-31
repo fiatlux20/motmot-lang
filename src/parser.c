@@ -15,7 +15,7 @@ static void string(ParserState*);
 static void unary(ParserState*);
 
 BytecodeArray *parse(VirtualMachine *vm, TokenArray *tokens) {
-    dynarray_iterator iter = { tokens->count, 0 };
+    ArrayIterator iter = { tokens->count, 0 };
     BytecodeArray *bytecode = create_bytecode_dynarray();
     bytecode->names = &vm->names;
 

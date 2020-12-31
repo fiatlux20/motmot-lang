@@ -20,6 +20,6 @@
 typedef struct {
     unsigned int array_capacity;
     unsigned int index;
-} dynarray_iterator;
+} ArrayIterator;
 
 #endif /* _COMMON_H_ */
