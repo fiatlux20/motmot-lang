@@ -153,6 +153,10 @@ void emit_instruction(ByteArray *code, Instruction instr) {
         *(writer++) = 0x0f;
         *(writer++) = 0x57;
         code->elements += 2;
+    } else if (instr == I_AND) {
+        *(writer++) = 0x0f;
+        *(writer++) = 0x54;
+        code->elements += 2;
     } else {
         *(writer++) = 0xf3;
         *(writer++) = 0x0f;
@@ -178,6 +182,9 @@ void emit_instruction(ByteArray *code, Instruction instr) {
                 *(writer++) = 0x51;
                 break;
             case I_XOR:
+                break;
+            case I_CMP:
+                *(writer++) = 0xc2;
                 break;
         }
         code->elements += 3;
@@ -633,7 +640,7 @@ static void binary(ParserState *parser) {
      */
     int concatenating = 0;
 
-    if (!(operator->type == T_MOD) && !parser->parse_function && get_prev_move_dest(parser->code) == parser->current_reg - 1) {
+    if (!(operator->type == T_MOD || operator->type == T_DBLEQL) && !parser->parse_function && get_prev_move_dest(parser->code) == parser->current_reg - 1) {
         concatenating = 1;
         int offset = get_prev_move_offset(parser->code);
         if (offset == 0) {
@@ -649,7 +656,16 @@ static void binary(ParserState *parser) {
         case T_MINUS: emit_instruction(parser->code, I_SUB); break;
         case T_STAR:  emit_instruction(parser->code, I_MUL); break;
         case T_SLASH: emit_instruction(parser->code, I_DIV); break;
-        case T_DBLEQL: parser->error = 1; break;
+        case T_DBLEQL:
+            emit_instruction(parser->code, I_CMP);
+            emit_reg_to_reg(parser->code, parser->current_reg - 1, parser->current_reg - 2);
+            emit_byte(parser->code, 0x00);
+            emit_instruction(parser->code, I_MOV);
+            emit_const_to_reg_abs(parser, parser->functions->one_offset, parser->current_reg - 1);
+            emit_instruction(parser->code, I_AND);
+            emit_reg_to_reg(parser->code, parser->current_reg - 1, parser->current_reg - 2);
+            parser->current_reg--;
+            return;
         case T_MOD: 
             /* simple mod: value - floor(value / mod) * mod
              *  movss   %xmm0, %xmm2

@@ -53,7 +53,7 @@ TokenArray *tokenize(char *code, FunctionTable *functions) {
             case '(':  current.type = T_LPAREN; break;
             case ')':  current.type = T_RPAREN; break;
             case '=':  if (code[i + 1] == '=') {
-                    current.type = T_DBLEQL; break;
+                    current.type = T_DBLEQL; i++; break;
                 } else {
                     current.type = T_EQUALS; break;
                 }

@@ -30,7 +30,9 @@ typedef enum {
     I_DIV,
     I_SQRT,
     I_XOR,
-    I_ROUND
+    I_ROUND,
+    I_AND,
+    I_CMP
 } Instruction;
 
 typedef struct rule {
