@@ -22,7 +22,10 @@ typedef enum {
     T_STAR,
     T_SLASH,
     T_MOD,
-    T_SQRT
+    T_SQRT,
+    T_IF,
+    T_THEN,
+    T_ELSE,
 } TokenType;
 
 typedef struct token {
@@ -36,6 +39,7 @@ typedef struct token {
 typedef struct token_array {
     Token *tokens;
     char *var_name;
+    char *func_name;
     unsigned int elements;
     unsigned int capacity;
     unsigned int num_constants;

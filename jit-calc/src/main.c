@@ -30,6 +30,10 @@ void run(char *code, FunctionTable *functions) {
         return;
     }
 
+    #ifdef DEBUG
+    disassemble(parser->code);
+    #endif
+
     if (!parser->parse_function) {
         float (*compiled)(float*) = compile_expression(functions, parser->code);
         printf("%f\n", compiled(parser->constants));
@@ -37,9 +41,6 @@ void run(char *code, FunctionTable *functions) {
         compile_function(functions, parser->code);
     }
 
-    #ifdef DEBUG
-    disassemble(parser->code);
-    #endif
     // printf("----\n");
     // dump_memory_range(functions, 0x00, 0x100);
 
@@ -63,6 +64,7 @@ void run_interactive() {
         run(buf, functions);
     }
 
+    dump_memory_range(functions, 0x00, 0x100);
     free_function_table(functions);
 }
 

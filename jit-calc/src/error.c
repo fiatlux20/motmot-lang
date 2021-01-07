@@ -15,15 +15,11 @@
 
 static FunctionTable *function_table;
 
-static void sigseg_handler(int signum, siginfo_t *info, void *ucontext) {
-    ucontext_t *context = (ucontext_t*) ucontext;
-    unsigned long reg_rip = context->uc_mcontext.gregs[REG_RIP];
-    report_error("FatalError", "Received SIGSEGV at 0x%016lx", reg_rip);
-
+static void report_jit_error(unsigned long reg_rip) {
     if (reg_rip > (unsigned long) function_table->executable_memory &&
         reg_rip < (unsigned long) ((char*) function_table->executable_memory + function_table->memory_size)) {
         unsigned long offset = reg_rip - (unsigned long) function_table->executable_memory;
-        fprintf(stderr, "Offset +0x%lx from beginning of JIT code memory page.\n\n", offset);
+        fprintf(stderr, "Offset +0x%lx from beginning of JIT-compiler memory page.\n\n", offset);
         fprintf(stderr, "-----------------------------------------------\n");
 
         long low  = ((offset - 0x20) / 0x10) * 0x10;
@@ -36,7 +32,7 @@ static void sigseg_handler(int signum, siginfo_t *info, void *ucontext) {
         }
 
         fprintf(stderr, "0x%016lx to 0x%016lx\n", (unsigned long) function_table->executable_memory + low, (unsigned long) function_table->executable_memory + high - 1);
-        dump_memory_range(function_table, low, high);
+        dump_memory_range_highlight(function_table, low, high, offset);
 
         // if (offset % 16 <= 8) {
         //     for (int i = 0; i < offset % 16; i++) {
@@ -54,13 +50,37 @@ static void sigseg_handler(int signum, siginfo_t *info, void *ucontext) {
     exit(1);
 }
 
+static void sigseg_handler(int signum, siginfo_t *info, void *ucontext) {
+    ucontext_t *context = (ucontext_t*) ucontext;
+    unsigned long reg_rip = context->uc_mcontext.gregs[REG_RIP];
+    report_error("FatalError", "Received SIGSEGV at instruction 0x%016lx", reg_rip);
+
+    report_jit_error(reg_rip);
+    exit(1);
+}
+
+static void sigill_handler(int signum, siginfo_t *info, void *ucontext) {
+    ucontext_t *context = (ucontext_t*) ucontext;
+    unsigned long reg_rip = context->uc_mcontext.gregs[REG_RIP];
+    report_error("FatalError", "Received SIGILL at instruction 0x%016lx", reg_rip);
+
+    report_jit_error(reg_rip);
+    exit(1);
+}
+
 void init_error_handler(FunctionTable *functions) {
-    struct sigaction action;
     function_table = functions;
+
+    struct sigaction action;
     sigaction(SIGSEGV, NULL, &action);
     action.sa_sigaction = sigseg_handler;
     action.sa_flags |= SA_SIGINFO;
     sigaction(SIGSEGV, &action, NULL);
+
+    sigaction(SIGILL, NULL, &action);
+    action.sa_sigaction = sigill_handler;
+    action.sa_flags |= SA_SIGINFO;
+    sigaction(SIGILL, &action, NULL);
 }
 
 void report_error(const char *error_type, const char *fmt, ...) {

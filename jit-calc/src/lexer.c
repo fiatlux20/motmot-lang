@@ -69,6 +69,9 @@ TokenArray *tokenize(char *code, FunctionTable *functions) {
             case 'a'...'z': {
                 TokenType keyword = get_keyword(code + i);
                 if (keyword == T_FUNC) { current = lex_function(tokens, functions, code + i, &i); break; }
+                else if (keyword == T_IF) { current.type = T_IF; i += 1; break; }
+                else if (keyword == T_THEN) { current.type = T_THEN; i += 3; break; }
+                else if (keyword == T_ELSE) { current.type = T_ELSE; i += 3; break; }
                 else if (keyword == T_SQRT) { current = lex_sqrt(code + i, &i); break; }
                 else { current = lex_identifier(tokens, functions, code + i, &i); break; }
             }
@@ -123,7 +126,11 @@ void print_tokens(TokenArray *tokens) {
             case T_MINUS:   printf("(MINUS)"); break;
             case T_STAR:    printf("(STAR)"); break;
             case T_SLASH:   printf("(SLASH)"); break;
+            case T_MOD:     printf("(MOD)"); break;
             case T_SQRT:    printf("(SQRT)"); break;
+            case T_IF:      printf("(IF)"); break;
+            case T_THEN:    printf("(THEN)"); break;
+            case T_ELSE:    printf("(ELSE)"); break;
         }
         printf(" ");
     }
@@ -155,6 +162,7 @@ static TokenArray *new_token_array() {
     array->num_constants = 0;
     array->in_function = 0;
     array->var_name = NULL;
+    array->func_name = NULL;
     array->tokens = malloc(sizeof *array->tokens * array->capacity);
     return array;
 }
@@ -204,9 +212,14 @@ static Token lex_number(char *code, unsigned int *i) {
 }
 
 static TokenType get_keyword(char *code) {
-    if (*code == 'f' && (strncmp(code, "function", 8) == 0)) { return T_FUNC; }
-    if (*code == 's' && (strncmp(code, "sqrt", 4) == 0)) { return T_SQRT; }
-    return T_ERROR;
+    switch (*code) {
+        case 'e': return (strncmp(code, "else", 4) == 0) ? T_ELSE : T_ERROR;
+        case 'f': return (strncmp(code, "function", 8) == 0) ? T_FUNC : T_ERROR;
+        case 'i': return (strncmp(code, "if", 2) == 0) ? T_IF : T_ERROR;
+        case 's': return (strncmp(code, "sqrt", 4) == 0) ? T_SQRT : T_ERROR;
+        case 't': return (strncmp(code, "then", 4) == 0) ? T_THEN : T_ERROR;
+        default: return T_ERROR;
+    }
 }
 
 static Token lex_sqrt(char *code, unsigned int *i) {
@@ -244,11 +257,12 @@ static Token lex_function(TokenArray *tokens, FunctionTable *functions, char *co
 
     func.string = strndup(begin, end - begin);
 
-    if (strncmp(func.string, "sqrt", 4) == 0 || get_key_by_string_n(functions->table, func.string, (size_t) (end - begin)) != NULL) {
+    if (get_keyword(func.string) != T_ERROR || get_key_by_string_n(functions->table, func.string, (size_t) (end - begin)) != NULL) {
         report_error("TokenError", "Function name '%s' aliases another function or keyword.", func.string);
         free(func.string);
         return (Token) { T_ERROR };
     }
+    tokens->func_name = func.string;
     return func;
 }
 
@@ -278,9 +292,14 @@ static Token lex_identifier(TokenArray *tokens, FunctionTable *functions, char *
         }
     }
 
-    char *func_name = get_key_by_string_n(functions->table, code, (size_t) (end - code));
     var.type = T_FUNCALL;
-    var.string = func_name;
+    if (tokens->in_function && strncmp(tokens->func_name, code, (size_t) (end - code)) == 0) {
+        var.string = tokens->func_name;
+    } else {
+        char *func_name = get_key_by_string_n(functions->table, code, (size_t) (end - code));
+        var.string = func_name;
+    }
+
     // if (func_name == NULL) {
     //     char *name = strndup(code, end - code);
     //     report_error("TokenError", "Undefined function '%s'.", name);

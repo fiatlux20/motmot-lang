@@ -39,6 +39,7 @@ FunctionTable *create_function_table();
 void free_function_table(FunctionTable *table);
 void dump_memory(FunctionTable *functions);
 void dump_memory_range(FunctionTable *functions, unsigned long low, unsigned long high);
+void dump_memory_range_highlight(FunctionTable *functions, unsigned long low, unsigned long high, unsigned long byte);
 
 float (*compile_expression(FunctionTable *functions, ByteArray *code))(float*);
 float (*compile_function(FunctionTable *functions, ByteArray *code))(float, float*);

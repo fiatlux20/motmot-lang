@@ -21,11 +21,19 @@ static Token *peek(ParserState *parser, unsigned int distance);
 static void number(ParserState *parser);
 static void function(ParserState *parser);
 static void funccall(ParserState *parser);
+static void if_stmt(ParserState *parser);
 static void identifier(ParserState *parser);
 static void grouping(ParserState *parser);
 static void binary(ParserState *parser);
 static void unary(ParserState *parser);
 static void emit_return(ByteArray *code);
+static void emit_function_header(ParserState *parser);
+static void emit_function_footer(ParserState *parser);
+
+typedef enum Register {
+    RBP = 0,
+    RDI = 2
+} Register;
 
 const static Rule rules[] = {
     [T_ERROR]   = { NULL,       NULL,   PREC_NONE },
@@ -44,27 +52,28 @@ const static Rule rules[] = {
     [T_SLASH]   = { NULL,       binary, PREC_FACTOR },
     [T_MOD]     = { NULL,       binary, PREC_FACTOR },
     [T_SQRT]    = { unary,      NULL,   PREC_CALL },
+    [T_IF]      = { if_stmt,    NULL,   PREC_CALL },
+    [T_THEN]    = { NULL,       NULL,   PREC_NONE },
+    [T_ELSE]    = { NULL,       NULL,   PREC_NONE },
 };
 
 ParserState *parse(TokenArray *tokens, FunctionTable *functions) {
     ParserState *parser = init_parser(tokens, functions);
 
-    // emit_stack_frame(parser->code, 0);
-    // begin expr with 53 48 89 fb to push rdi and move to rbx
     ByteArray *code = parser->code;
-    /*
-    code->array[code->elements++] = 0x48;
-    code->array[code->elements++] = 0x83;
-    code->array[code->elements++] = 0xec;
-    code->array[code->elements++] = 0x08;
-    */
+
+    if (tokens->func_name != NULL) {
+        parser->parse_function = 1;
+
+        emit_function_header(parser);
+    }
+
     parse_precedence(parser, PREC_NUMBER);
-    /*
-    code->array[code->elements++] = 0x48;
-    code->array[code->elements++] = 0x83;
-    code->array[code->elements++] = 0xc4;
-    code->array[code->elements++] = 0x08;
-    */
+
+    if (parser->parse_function) {
+        emit_function_footer(parser);
+    }
+
     emit_return(parser->code);
 
     if (parser->parse_function) {
@@ -153,6 +162,10 @@ void emit_instruction(ByteArray *code, Instruction instr) {
         *(writer++) = 0x0f;
         *(writer++) = 0x57;
         code->elements += 2;
+    } else if (instr == I_COMISS) {
+        *(writer++) = 0x0f;
+        *(writer++) = 0x2e;
+        code->elements += 2;
     } else if (instr == I_AND) {
         *(writer++) = 0x0f;
         *(writer++) = 0x54;
@@ -164,6 +177,9 @@ void emit_instruction(ByteArray *code, Instruction instr) {
         switch (instr) {
             case I_MOV:
                 *(writer++) = 0x10;
+                break;
+            case I_MOV_STACK:
+                *(writer++) = 0x11;
                 break;
             case I_MOVAPS: break;
             case I_ADD:
@@ -212,23 +228,41 @@ void emit_rel_call(ParserState *parser, unsigned int position) {
     parser->code->elements += 5;
 }
 
+void emit_reg_to_mem(ByteArray *code, int offset, unsigned int src, Register dst) {
+    RESIZE_IF_NECESSARY(code, 5)
+
+    uint8_t *writer = &code->array[code->elements];
+    offset *= 4;
+    if (offset >= -128 && offset <= 127) { /* 1 byte offset */
+        *(writer++) = (0x45 + dst) | src << 3;
+        *(writer++) = offset;
+        code->elements += 2;
+    } else { /* 4 byte offset in little-endian */
+        *(writer++) = 0x87 | src << 3;
+        *(writer++) = (offset & 0xff);
+        *(writer++) = (offset & 0xff00) >> 8;
+        *(writer++) = (offset & 0xff0000) >> 16;
+        *(writer++) = offset >> 24;
+        code->elements += 5;
+    }
+}
 /**
  * emits an operand to an instruction to fetch from memory
  */
-void emit_mem_to_reg(ByteArray *code, unsigned int offset, unsigned int reg) {
+void emit_mem_to_reg(ByteArray *code, int offset, Register src, unsigned int dst) {
     RESIZE_IF_NECESSARY(code, 5)
 
     uint8_t *writer = &code->array[code->elements];
     offset *= 4;
     if (offset == 0) { /* no offset */
-        *(writer++) = 0x07 | reg << 3;
+        *(writer++) = (0x05 + src) | dst << 3;
         code->elements++;
-    } else if (offset < 128) { /* 1 byte offset */
-        *(writer++) = 0x47 | reg << 3;
+    } else if (offset >= -128 && offset <= 127) { /* 1 byte offset */
+        *(writer++) = (0x45 + src) | dst << 3;
         *(writer++) = offset;
         code->elements += 2;
     } else { /* 4 byte offset in little-endian */
-        *(writer++) = 0x87 | reg << 3;
+        *(writer++) = (0x85 + src) | dst << 3;
         *(writer++) = (offset & 0xff);
         *(writer++) = (offset & 0xff00) >> 8;
         *(writer++) = (offset & 0xff0000) >> 16;
@@ -308,6 +342,40 @@ static void emit_byte(ByteArray *code, unsigned char byte) {
     code->array[code->elements++] = byte;
 }
 
+static int emit_jmp(ByteArray *code, unsigned char offset) {
+    RESIZE_IF_NECESSARY(code, 2)
+
+    code->array[code->elements++] = 0xeb;
+    code->array[code->elements++] = offset;
+    return code->elements - 1;
+}
+
+static int emit_jne(ByteArray *code, unsigned char offset) {
+    RESIZE_IF_NECESSARY(code, 2)
+
+    code->array[code->elements++] = 0x75;
+    code->array[code->elements++] = offset;
+    return code->elements - 1;
+}
+
+static void emit_function_header(ParserState *parser) {
+    // pushq %rbp
+    // movq  %rsp, %rbp   - 55 48 89 e5
+    emit_byte(parser->code, 0x55);
+    emit_byte(parser->code, 0x48);
+    emit_byte(parser->code, 0x89);
+    emit_byte(parser->code, 0xe5);
+
+    // movss %xmm0, -4(%rbp)
+    emit_instruction(parser->code, I_MOV_STACK);
+    emit_reg_to_mem(parser->code, -1, 0, RBP);
+}
+
+static void emit_function_footer(ParserState *parser) {
+    // popq %rbp
+    emit_byte(parser->code, 0x5d);
+}
+
 static int get_prev_move_dest(ByteArray *code) {
     for (int i = 0; i < 5; i++) {
         if (code->array[code->elements - i] == 0x10 && code->array[code->elements - i - 1] == 0x0f && code->array[code->elements - i - 2] == 0xf3) {
@@ -358,6 +426,9 @@ static int disassemble_fp_instr(unsigned char *code) {
     case 0x10:
         printf("movss  ");
         break;
+    case 0x11: /* move to/from rbp */
+        printf("movss  ");
+        break;
     case 0x58:
         printf("addss  ");
         break;
@@ -376,6 +447,12 @@ static int disassemble_fp_instr(unsigned char *code) {
     case 0x51:
         printf("sqrtss ");
         break;
+    case 0xc2:
+        printf("cmpeqss ");
+        break;
+    case 0x2e:
+        printf("ucomiss ");
+        break;
     }
 
     /* check mode of operand byte */
@@ -390,7 +467,11 @@ static int disassemble_fp_instr(unsigned char *code) {
         }
         return 4;
     case 0x40: /* mem to reg, 1 byte offset */
-        printf("x%02x(%%rdi),        %%xmm%d", code[4], (code[3] & 0x38) >> 3);
+        if ((code[3] & 0x07) == 0x05) {
+            printf("%02d(%%rbp),        %%xmm%d", (signed char) code[4], (code[3] & 0x38) >> 3);
+        } else {
+            printf("x%02x(%%rdi),        %%xmm%d", code[4], (code[3] & 0x38) >> 3);
+        }
         return 5;
     case 0x80: /* mem to reg, 4 byte offset */
         /* only prints between 0x00 and 0xff */
@@ -414,9 +495,11 @@ static int disassemble_fp_instr(unsigned char *code) {
 static int disassemble_instr(unsigned char *code) {
     uint32_t offset;
     switch (code[0]) {
-    case 0x53: printf("53                       push   %%rbx"); return 1;
-    case 0x5b: printf("5b                       pop    %%rbx"); return 1;
+    case 0x55: printf("55                       push   %%rbp"); return 1;
+    case 0x5d: printf("5d                       pop    %%rbp"); return 1;
     case 0xc3: printf("c3                       ret"); return 0;
+    case 0xeb: printf("eb %02x                    jmp    %02d", code[1], code[1]); return 2;
+    case 0x75: printf("75 %02x                    jne    %02d", code[1], code[1]); return 2;
     case 0xe8:
         offset = code[1] | code[2] << 8 | code[3] << 16 | code[4] << 24;
         printf("e8 %02x %02x %02x %02x           call   %d", code[1], code[2], code[3], code[4], (int32_t) offset);
@@ -434,10 +517,10 @@ static int disassemble_instr(unsigned char *code) {
         }
     case 0x66: 
         if (code[1] == 0x0f && code[2] == 0x3a && code[3] == 0x0a) {
-            printf("66 0f 3a 0a %02x %02x        roundss", code[4], code[5]);
+            printf("66 0f 3a 0a %02x %02x        roundss %d", code[4], code[5], code[5]);
             return 6;
         }
-    case 0x0f:
+    case 0x0f: return disassemble_fp_instr(code - 1) - 1;
     case 0xf3: return disassemble_fp_instr(code);
     default: printf("%02x                   unknown", code[0]); return 1;
     }
@@ -518,7 +601,7 @@ static void number(ParserState *parser) {
         }
     } else {
         emit_instruction(parser->code, I_MOV);
-        emit_mem_to_reg(parser->code, parser->constants_ind++, parser->current_reg++);
+        emit_mem_to_reg(parser->code, parser->constants_ind++, RDI, parser->current_reg++);
     }
     advance(parser);
 }
@@ -613,13 +696,50 @@ static void funccall(ParserState *parser) {
     }
 }
 
+static void if_stmt(ParserState *parser) {
+    advance(parser);
+    parse_precedence(parser, PREC_NUMBER);
+
+    if (!expect(parser, T_THEN)) {
+        report_error("SyntaxError", "Expected 'then' after 'if' expression.");
+        return;
+    }
+
+    emit_instruction(parser->code, I_COMISS);
+    emit_const_to_reg_abs(parser, parser->functions->one_offset, parser->current_reg - 1);
+    int jne_offset = emit_jne(parser->code, 0);
+    int jne_next_byte = parser->code->elements;
+    parser->current_reg--;
+
+    int current_reg = parser->current_reg;
+    parse_precedence(parser, PREC_NUMBER);
+
+
+    if (!expect(parser, T_ELSE)) {
+        report_error("SyntaxError", "Expected 'else' after 'then'.");
+        return;
+    }
+
+    parser->current_reg = current_reg;
+    int jmp_offset = emit_jmp(parser->code, 0);
+    int jmp_next_byte = parser->code->elements;
+
+    // patch in jne offset
+    parser->code->array[jne_offset] = parser->code->elements - jne_next_byte;
+
+    parse_precedence(parser, PREC_NUMBER);
+
+    // patch in jmp offset
+    parser->code->array[jmp_offset] = parser->code->elements - jmp_next_byte;
+}
+
 static void identifier(ParserState *parser) {
     Token *var = parser->current;
     advance(parser);
 
     if (1 || parser->current_reg - 1 != 0) {
         emit_instruction(parser->code, I_MOV);
-        emit_reg_to_reg(parser->code, 0, parser->current_reg++);
+        emit_mem_to_reg(parser->code, -1, RBP, parser->current_reg++);
     }
 }
 
@@ -695,7 +815,7 @@ static void binary(ParserState *parser) {
     }
 
     if (concatenating) {
-        emit_mem_to_reg(parser->code, parser->constants_ind - 1, parser->current_reg - 2);
+        emit_mem_to_reg(parser->code, parser->constants_ind - 1, RDI, parser->current_reg - 2);
     } else {
         emit_reg_to_reg(parser->code, parser->current_reg - 1, parser->current_reg - 2);
     }

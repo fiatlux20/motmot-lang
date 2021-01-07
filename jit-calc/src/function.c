@@ -96,7 +96,7 @@ void free_function_table(FunctionTable *ft) {
 
 void dump_memory(FunctionTable *functions) {
     char *reader = (char*) functions->executable_memory;
-    for (int i = 0; i < 256; i++) {
+    for (int i = 0; i < functions->memory_size; i++) {
         if (i > 0 && i % 16 == 0) {
             printf("\n");
         }
@@ -112,6 +112,21 @@ void dump_memory_range(FunctionTable *functions, unsigned long low, unsigned lon
             printf("\n");
         }
         printf("%02x ", *(reader++));
+    }
+    printf("\n");
+}
+
+void dump_memory_range_highlight(FunctionTable *functions, unsigned long low, unsigned long high, unsigned long byte) {
+    unsigned char *reader = ((unsigned char*) functions->executable_memory) + low;
+    for (int i = 0; i < high - low; i++) {
+        if (i > 0 && i % 16 == 0) {
+            printf("\n");
+        }
+        if (i == byte) {
+            printf("\033[4m%02x\033[0m ", *(reader++));
+        } else {
+            printf("%02x ", *(reader++));
+        }
     }
     printf("\n");
 }

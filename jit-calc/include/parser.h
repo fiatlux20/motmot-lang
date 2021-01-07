@@ -23,6 +23,7 @@ typedef enum {
 
 typedef enum {
     I_MOV,
+    I_MOV_STACK,
     I_MOVAPS,
     I_ADD,
     I_SUB,
@@ -32,7 +33,8 @@ typedef enum {
     I_XOR,
     I_ROUND,
     I_AND,
-    I_CMP
+    I_CMP,
+    I_COMISS
 } Instruction;
 
 typedef struct rule {

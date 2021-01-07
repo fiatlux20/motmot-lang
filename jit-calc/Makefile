@@ -5,7 +5,7 @@ OUT_FILE := calc
 CC := gcc
 DEFINES := -DDEBUG
 CWARNS := -Wall -Wshadow -Wpointer-arith -Wcast-align -Wstrict-aliasing=1 # -Waggregate-return
-CFLAGS := -I./$(IDIR) $(CWARNS) $(DEFINES) -g -fsanitize=address -fsanitize=undefined
+CFLAGS := -I./$(IDIR) $(CWARNS) $(DEFINES) -g # -fsanitize=address -fsanitize=undefined
 
 HEADERS := $(wildcard $(IDIR)/*.h)
 SOURCES := $(wildcard $(SDIR)/*.c)
