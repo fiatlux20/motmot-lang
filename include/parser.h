@@ -22,7 +22,9 @@ typedef void (*ParsingFunction)(ParserState* s);
 
 typedef enum {
     PREC_NONE,
+    PREC_NUMBER,
     PREC_ASSIGNMENT,
+    PREC_COMPARISON,
     PREC_TERM,
     PREC_FACTOR
 } Precedence;

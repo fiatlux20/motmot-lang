@@ -107,6 +107,20 @@ static void op_div(Stack *s) {
     }
 }
 
+static void op_cmp(Stack *s) {
+    Value b = pop(s);
+    Value a = pop(s);
+
+    if (a.type == VAL_TYPE_DOUBLE && b.type == VAL_TYPE_DOUBLE) {
+        push(s, bool_value(b.as.real == a.as.real));
+    } else if (a.type == VAL_TYPE_STRING && b.type == VAL_TYPE_STRING) {
+        push(s, bool_value(strcmp(a.as.string, b.as.string) == 0));
+    } else {
+        report_error("TypeError", "Incompatible types for '=='");
+        // error
+    }
+}
+
 
 static Stack initialize_stack() {
     Stack stack;
@@ -188,6 +202,9 @@ void evaluate(VirtualMachine *vm, BytecodeArray *bytecode) {
             break;
         case OP_DIV:
             op_div(&vm->stack);
+            break;
+        case OP_CMP:
+            op_cmp(&vm->stack);
             break;
         default:
             printf("unknown instruction\n");

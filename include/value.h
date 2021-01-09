@@ -74,6 +74,14 @@ Value double_value(double x);
 Value string_value(char *x);
 
 /**
+ * Creates a Value with type boolean. 1 for true, and 0 for false.
+ *
+ * @param bool 1 or 0
+ * @return A Value struct.
+ */
+Value bool_value(char bool);
+
+/**
  * Creates a Value from two strings.
  *
  * @param s1 The first string.

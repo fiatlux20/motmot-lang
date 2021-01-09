@@ -72,7 +72,7 @@ const static Rule rules[] = {
     [T_PIPE]         = { NULL,       NULL,   PREC_NONE },
     [T_AMP]          = { NULL,       NULL,   PREC_NONE },
     [T_EQL]          = { NULL,       NULL,   PREC_NONE },
-    [T_DBL_EQL]      = { NULL,       NULL,   PREC_NONE },
+    [T_DBL_EQL]      = { NULL,       binary, PREC_COMPARISON },
     [T_BANG]         = { NULL,       NULL,   PREC_NONE },
     [T_BANG_EQL]     = { NULL,       NULL,   PREC_NONE },
     [T_GREATER]      = { NULL,       NULL,   PREC_NONE },
@@ -201,6 +201,7 @@ static void binary(ParserState *parser) {
         case T_MINUS: emit_opcode(parser->bytecode, OP_SUB); break;
         case T_ASTERISK: emit_opcode(parser->bytecode, OP_MULT); break;
         case T_SLASH: emit_opcode(parser->bytecode, OP_DIV); break;
+        case T_DBL_EQL: emit_opcode(parser->bytecode, OP_CMP); break;
         default:
         break;
     }

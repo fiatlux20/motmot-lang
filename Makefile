@@ -9,7 +9,7 @@ TEST_FILE := test
 CC := gcc
 CWARNS := -Wall -Wshadow -Wpointer-arith -Wcast-align -Wstrict-aliasing=1 # -Waggregate-return
 DEFINES := -DMAJOR_VERS=$(MAJOR_VERS) -DMINOR_VERS=$(MINOR_VERS)
-CFLAGS := -I./$(IDIR) $(CWARNS) $(DEFINES) # -Og -g -fsanitize=address
+CFLAGS := -I./$(IDIR) $(CWARNS) $(DEFINES) -O3 # -Og -g -fsanitize=address
 
 HEADERS := $(wildcard $(IDIR)/*.h)
 SOURCES := $(wildcard $(SDIR)/*.c)

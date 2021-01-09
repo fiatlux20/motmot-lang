@@ -34,6 +34,13 @@ Value string_value(char *x) {
     return v;
 }
 
+Value bool_value(char boolean) {
+    Value v;
+    v.type = VAL_TYPE_BOOLEAN;
+    v.as.boolean = boolean;
+    return v;
+}
+
 Value add_strings(Value *s1, Value *s2) {
     unsigned int len1 = strlen(s1->as.string);
     unsigned int len2 = strlen(s2->as.string);
