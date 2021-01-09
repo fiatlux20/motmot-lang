@@ -342,6 +342,14 @@ static void emit_byte(ByteArray *code, unsigned char byte) {
     code->array[code->elements++] = byte;
 }
 
+static void emit_bytes(ByteArray *code, char *bytes, unsigned int length) {
+    RESIZE_IF_NECESSARY(code, length);
+
+    for (int i = 0; i < length; i++) {
+        code->array[code->elements++] = bytes[i];
+    }
+}
+
 static int emit_jmp(ByteArray *code, unsigned char offset) {
     RESIZE_IF_NECESSARY(code, 2)
 
@@ -361,10 +369,10 @@ static int emit_jne(ByteArray *code, unsigned char offset) {
 static void emit_function_header(ParserState *parser) {
     // pushq %rbp
     // movq  %rsp, %rbp   - 55 48 89 e5
-    emit_byte(parser->code, 0x55);
-    emit_byte(parser->code, 0x48);
-    emit_byte(parser->code, 0x89);
-    emit_byte(parser->code, 0xe5);
+    emit_bytes(parser->code, "\x55\x48\x89\xe5", 4);
+
+    // sub 4 rsp
+    emit_bytes(parser->code, "\x48\x83\xec\x04", 4);
 
     // movss %xmm0, -4(%rbp)
     emit_instruction(parser->code, I_MOV_STACK);
@@ -372,8 +380,8 @@ static void emit_function_header(ParserState *parser) {
 }
 
 static void emit_function_footer(ParserState *parser) {
-    // popq %rbp
-    emit_byte(parser->code, 0x5d);
+    // leave
+    emit_byte(parser->code, 0xc9);
 }
 
 static int get_prev_move_dest(ByteArray *code) {
@@ -498,6 +506,7 @@ static int disassemble_instr(unsigned char *code) {
     case 0x55: printf("55                       push   %%rbp"); return 1;
     case 0x5d: printf("5d                       pop    %%rbp"); return 1;
     case 0xc3: printf("c3                       ret"); return 0;
+    case 0xc9: printf("c9                       leave"); return 0;
     case 0xeb: printf("eb %02x                    jmp    %02d", code[1], code[1]); return 2;
     case 0x75: printf("75 %02x                    jne    %02d", code[1], code[1]); return 2;
     case 0xe8:
@@ -514,6 +523,9 @@ static int disassemble_instr(unsigned char *code) {
         } else if (code[1] == 0x83 && code[2] == 0xc4) {
             printf("48 83 c4 %02x              add    %d,                %%rsp", code[3], code[3]);
             return 4;
+        } else if (code[1] == 0x89 && code[2] == 0xe5) {
+            printf("48 89 e5                 mov    %%rsp,             %%rbp", code[3], code[3]);
+            return 3;
         }
     case 0x66: 
         if (code[1] == 0x0f && code[2] == 0x3a && code[3] == 0x0a) {
